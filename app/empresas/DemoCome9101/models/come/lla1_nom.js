@@ -1,6 +1,6 @@
 /* jshint indent: 2 */
 module.exports = function(sequelize, DataTypes) {
-  return sequelize.define('man_comenom', {
+  return sequelize.define('lla1_nom', {
 'suc_pge': {type: DataTypes.CHAR(3),allowNull: false,defaultValue: ' ',comment: "SUCURSAL"  },
 'cop_nom': {type: DataTypes.CHAR(1),allowNull: false,defaultValue: ' ',comment: "TIPO C=CLIENTES P=PROVEEDORES"  },
 'cod_nom': {type: DataTypes.CHAR(12),allowNull: false,defaultValue: ' ',comment: "CODIGO DEL CLIENTE O PROVEEDOR"  },
@@ -70,14 +70,14 @@ module.exports = function(sequelize, DataTypes) {
 'rtg_nom': {type: DataTypes.SMALLINT,allowNull: false,defaultValue: '0',comment: "RANGO SEGUN TGF_NOM PARAMETRO SEGUN PGF_NOM SI ES SEMANAL EL NUMERO 1=LUNES 7=DOMINGO"  },
 'mpa_sat': {type: DataTypes.CHAR(3),allowNull: false,defaultValue: ' ',comment: "METODO DE PAGO SEGUN TABLA DEL SAT     ver 3.3"  },
 'gln_nom': {type: DataTypes.CHAR(14),allowNull: false,defaultValue: ' ',comment: "CODIGO GLN"  },
+'dis_nom': {type: DataTypes.INTEGER,allowNull: false,defaultValue: '0',comment: "DISTANCIA DE ENTREGA"  },
 'usu_usu': {type: DataTypes.SMALLINT,allowNull: true,defaultValue: '0',comment: "USUARIO"  },
-'usu_cre': {type: DataTypes.SMALLINT,allowNull: true,defaultValue: '0',comment: "USUARIO CREADOR" },
+'usu_cre': {type: DataTypes.SMALLINT,allowNull: false,defaultValue: '0',comment: "USUARIO CREADOR"  },
 'tie_uac': {type: DataTypes.DATE,allowNull: true,comment: "FECHA DE LA ULTIMA ACTUALIZACION"  },
-'tie_cre': {type: DataTypes.DATE,allowNull: true,comment: "FECHA DE CREACION" },
-'timestamp': {type: DataTypes.INTEGER,allowNull: true,comment: "MARCA ULTIMA ACTUALIZACION"  },
+'tie_cre': {type: DataTypes.DATE,allowNull: true,comment: "TIEMPO DE CREACION"  },
+'timestamp': {type: DataTypes.INTEGER,allowNull: true,defaultValue: '0',comment: "MARCA ULTIMA ACTUALIZACION"  },
 'key_pri': {type: DataTypes.INTEGER,allowNull: false,defaultValue: '0',comment: "LLAVE PRIMARIA PARA LA ACTUALIZACION DE VISTAS" , primaryKey: true },
 createdAt: {field: 'tie_cre',type: DataTypes.DATE,},
 updatedAt: {field: 'tie_uac',type: DataTypes.DATE,} 
   }, { tableName: 'man_comenom'});
 };
-

@@ -1,6 +1,6 @@
 /* jshint indent: 2 */
 module.exports = function(sequelize, DataTypes) {
-  return sequelize.define('man_comevis', {
+  return sequelize.define('lla1_vis', {
 'nom_tab': {type: DataTypes.CHAR(10),allowNull: false,defaultValue: ' ',comment: "NOMBRE DE LA TABLA"  },
 'nom_vis': {type: DataTypes.CHAR(15),allowNull: false,defaultValue: ' ',comment: "NOMBRE DE LA VISTA"  },
 'fil_vis': {type: DataTypes.STRING(512),allowNull: false,comment: "FILVIS"  },
@@ -13,6 +13,8 @@ module.exports = function(sequelize, DataTypes) {
 'tbo_vis': {type: DataTypes.CHAR(15),allowNull: false,defaultValue: ' ',comment: "TBOVIS"  },
 'tmo_vis': {type: DataTypes.CHAR(15),allowNull: false,defaultValue: ' ',comment: "TMOVIS"  },
 'vre_vis': {type: DataTypes.CHAR(1),allowNull: false,defaultValue: ' ',comment: "VISTA REMOTA EN LA BASE DE DATOS"  },
+'vac_vis': {type: DataTypes.CHAR(1),allowNull: false,defaultValue: ' ',comment: "VISTA de actualizacion"  },
+
 'usu_usu': {type: DataTypes.INTEGER,allowNull: true,defaultValue: '0',comment: "USUARIO"  },
 'usu_cre': {type: DataTypes.INTEGER,allowNull: true,defaultValue: '0',comment: "USUARIO CREADOR" },
 'tie_uac': {type: DataTypes.DATE,allowNull: true,comment: "FECHA ULTIMA ACTUALIZACION"  },

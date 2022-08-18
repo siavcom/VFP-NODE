@@ -35,7 +35,7 @@ db.vi_lla1_tdo = require("./come/cometdo.js")(sequelize, Sequelize);
 db.vi_lla1_doc = require("./come/comedoc.js")(sequelize, Sequelize);
 
 db.vi_lla1_dat = require("./come/comedat.js")(sequelize, Sequelize);
-db.vi_lla1_ind = require("./come/comeind.js")(sequelize, Sequelize);
+db.vi_lla1_ind = require("./come/llla1_ind.js")(sequelize, Sequelize);
 db.vi_lla1_vis = require("./come/comevis.js")(sequelize, Sequelize);
 
 

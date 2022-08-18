@@ -207,13 +207,18 @@ exports.sql = (req, res) => {
   condicion.where = req.body.where; // Condicion Where de busqueda
   let nom_vis = ''
   let nom_tab = ''
+
+  console.log('req ======>>>>>>>',req.body)
   if (req.body.nom_vis && req.body.nom_vis != null)
-    nom_vis = req.body.nom_vis.toUpperCase();
+    nom_vis = req.body.nom_vis
   if (req.body.nom_tab && req.body.nom_tab != null)
-    nom_tab = req.body.nom_tab.toUpperCase();
+    nom_tab = req.body.nom_tab
 
-  if (req.body.opciones && req.body.opciones.replacements) opciones['replacements'] = req.body.opciones.replacements
+  if (nom_tab=='') nom_tab=nom_vis
+    if (req.body.opciones && req.body.opciones.replacements) opciones['replacements'] = req.body.opciones.replacements
 
+  nom_tab=nom_tab.toLowerCase()
+  nom_vis=nom_vis.toLowerCase()
 
 
   //if (req.body.nom_vis) nom_vis = req.body.nom_vis.toLowerCase();  // Nombre de la vista indice a utilizar 
@@ -224,7 +229,7 @@ exports.sql = (req, res) => {
   //let nom_tab = 'man_come' + nom_vis.substr(-3, 3); // Nombre de la tabla de mantenimiento
 
 
-  console.log('<<<<<<<<<<<<<<<<Tabla a utilizar >>>>>>>', nom_tab)
+  console.log('Tabla a utilizar ======>>>>>>>', nom_tab)
 
   const orden = { order: {} }
   let ins_sql = ''
@@ -534,18 +539,20 @@ exports.sql = (req, res) => {
 
 
       const key_pri = datos.key_pri;
-
-
+                  // aqui voy
+      delete datos['key_pri']   // borramos el key pri de los datos a actualizar
       if (datos.key_pri == 0) {
         res.writeHead(400, "No se puede actualizar un registro con key_pri=0", { 'Content-Type': 'text/plain' });
         res.send();
 
       }
       delete datos['val_vista'];
-      console.log('========== Objeto =======', db[nom_vis]);
+      console.log('========== Objeto =======', db[nom_tab]);
 
       db.sequelize.transaction({ autocommit: false })
         .then(transaction => {
+          console.log('========== Comienza transaction =======',nom_tab);
+
           db[nom_tab].update(datos, {
             where: { key_pri: key_pri },
             returning: true,
@@ -554,39 +561,40 @@ exports.sql = (req, res) => {
           })
             // db[nom_vis].upsert(dat_act, condicion)
             .then((result) => {
-              console.log('==========Dato actualizado=======', result);
+              console.log('==========Dato actualizado=======>>>>', result) // aqui voy , checar el resultado
               // Obtiene el timestamp actual
               db[nom_tab].findAll({  // busca el timestamp 
                 attributes: ['timestamp'],
-                where: { key_pri: key_pri }, transaction: transaction
+                where: { key_pri: key_pri }, 
+                transaction: transaction
               })
                 .then(data_key => {  // envia el timestamp
                   transaction.commit();
                   res.send(data_key);
                 })
                 .catch(err => {     // Error al leer el TimeStamp
-                  transaction.rollback();
                   res.writeHead(400, err.message, { 'Content-Type': 'text/plain' });
                   res.send();
                   console.error('Update Commit Error' ,err)  
+                  transaction.rollback();
  
                 });
               ///////////////////
               //res.send(data);
             })
             .catch(err => {
-              transaction.rollback();
               res.writeHead(409, err.message, { 'Content-Type': 'text/plain' });
               res.send();
               console.error('Update Error ',err)  
+              transaction.rollback();
 
             })
         })
           .catch(err => {
-          transaction.rollback();
           res.writeHead(409, err.message, { 'Content-Type': 'text/plain' });
           res.send();
           console.error('Update Transaction Error ',err)  
+          transaction.rollback();
 
         });
 

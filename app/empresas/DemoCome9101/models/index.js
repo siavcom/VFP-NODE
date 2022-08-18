@@ -28,16 +28,17 @@ db.sequelize = sequelize;
 // asignamos todas las vistas de captura
 
 //db.vi_lla1_nom = require("./siavcom.comenom.js")(sequelize, Sequelize);
-db.vi_lla1_nom = require("./come/comenom.js")(sequelize, Sequelize);
+/*
+db.vi_lla1_nom = require("./come/lla1_nom.js")(sequelize, Sequelize);
 db.vi_lla1_con = require("./come/comecon.js")(sequelize, Sequelize);
 db.vi_lla1_ven = require("./come/comeven.js")(sequelize, Sequelize);
 db.vi_lla1_tdo = require("./come/cometdo.js")(sequelize, Sequelize);
 db.vi_lla1_doc = require("./come/comedoc.js")(sequelize, Sequelize);
 
 db.vi_lla1_dat = require("./come/comedat.js")(sequelize, Sequelize);
-db.vi_lla1_ind = require("./come/comeind.js")(sequelize, Sequelize);
-db.vi_lla1_vis = require("./come/comevis.js")(sequelize, Sequelize);
-
+db.vi_lla1_ind = require("./come/lla1_ind.js")(sequelize, Sequelize);
+db.vi_lla1_vis = require("./come/lla1_vis.js")(sequelize, Sequelize);
+*/
 
 
 
