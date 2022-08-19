@@ -171,7 +171,12 @@ app/empresas/Demo/db.config.js
 exports.sql = (req, res) => {
   // const conexion=this.conexion; 
   //console.log('Conexion Sql =====>', conexion)
-  const id_con = req.body.id_con; // Id de conexion
+  const {id_con} = req.body; // Id de conexion   es lo mismo id_con=req.body.id_con
+
+
+  //{googggle, xcos, ...resultado} excluye objetos y en resultado que el objeto resultante
+
+
   const fec_act = new Date().toISOString().substr(0, 10); //  Fecha actual
 
 
@@ -538,16 +543,18 @@ exports.sql = (req, res) => {
       }
 
 
-      const key_pri = datos.key_pri;
-                  // aqui voy
-      delete datos['key_pri']   // borramos el key pri de los datos a actualizar
       if (datos.key_pri == 0) {
         res.writeHead(400, "No se puede actualizar un registro con key_pri=0", { 'Content-Type': 'text/plain' });
         res.send();
 
       }
+
+
+      const key_pri = datos.key_pri;
+                  // aqui voy
+      delete datos['key_pri']   // borramos el key pri de los datos a actualizar
       delete datos['val_vista'];
-      console.log('========== Objeto =======', db[nom_tab]);
+      console.log('========== Objeto datos a actualizar =======>', datos);
 
       db.sequelize.transaction({ autocommit: false })
         .then(transaction => {
