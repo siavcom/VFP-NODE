@@ -160,7 +160,7 @@ app/empresas/Demo/db.config.js
     })
     .catch(err => {
       console.log(err);
-      res.writeHead(400, err.message, { 'Content-Type': 'text/plain' });
+      res.writeHead(401, err.message, { 'Content-Type': 'text/plain' });
       res.send();
     });
   return
@@ -192,7 +192,7 @@ exports.sql = (req, res) => {
   }
 
   if (!conexion[id_con]) {
-    res.writeHead(409, 'No hay conexion o expiro el tiempo de conexion', { 'Content-Type': 'text/plain' });
+    res.writeHead(408, 'No hay conexion o expiro el tiempo de conexion', { 'Content-Type': 'text/plain' });
     res.send();
     return;
   }
@@ -300,11 +300,12 @@ exports.sql = (req, res) => {
           //let today=date+' '+today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
 
           // Definimos nuestra vista y asignamos el nombre dela tabla de mantenimiento
-          const view = {  //aqui me quede
+          const view = { 
             tip_obj :data[0][0].tip_obj,
             nom_tab: data[0][0].vac_vis,      // vista de actualizacion (mantenimiento) (anterior nom_tab)
             exp_where: data[0][0].wjs_vis,     //  wjs_vis=where javascript  sql_vis,   condicion where 
             exp_indice: '',                    // expresión  del indice
+            order:'',                          // orden de la tabla
             est_tabla: {},                     // estructura de la tabla
             new: [{}],                         // registro new
             old: [{}]                          //  regsitro old
@@ -412,11 +413,14 @@ exports.sql = (req, res) => {
 
           //   console.log('view.est_tabla Tabla===>',view.est_tabla)
           //console.log('Data===>',data[0][0])
+          view.ord_vis=data[0][0].ord_vis.trim().toLowerCase()         // orden de la vista
           let exp_ind = data[0][0].fil_vis.trim().toLowerCase();
+
           let con_ind = ''
           let nom_cam = ''
           let pos = exp_ind.indexOf(',')
-         // console.log(' Use nodata Vista 1 model======>',data[0][0])
+
+          // console.log(' Use nodata Vista 1 model======>',data[0][0])
 
           while (pos > 0) {   // Recorremos todas las variables del indice
               nom_cam = exp_ind.slice(0, pos);
@@ -439,7 +443,7 @@ exports.sql = (req, res) => {
 
           }
 
-          view.exp_indice = con_ind;
+          view.exp_indice = con_ind // Indice a utilizar
           
           //console.log(' Use nodata Vista ======>',nom_vis,data[0][0].fil_vis.trim().toLowerCase(),'Cond Indice==>'+ con_ind)
           //console.log('===================================================================== ')
@@ -482,7 +486,7 @@ exports.sql = (req, res) => {
     case 'INSERT':
 
       if (!datos) {
-        res.writeHead(409, 'No hay datos as insertar', { 'Content-Type': 'text/plain' });
+        res.writeHead(400, 'No hay datos as insertar', { 'Content-Type': 'text/plain' });
         res.send();
 
         return;
@@ -518,7 +522,7 @@ exports.sql = (req, res) => {
             .catch(err => {
               console.error('Insert Error ',err)
               transaction.rollback();
-              res.writeHead(409, err.message, { 'Content-Type': 'text/plain' });
+              res.writeHead(400, err.message, { 'Content-Type': 'text/plain' });
               res.send();
 
             });
@@ -590,7 +594,7 @@ exports.sql = (req, res) => {
               //res.send(data);
             })
             .catch(err => {
-              res.writeHead(409, err.message, { 'Content-Type': 'text/plain' });
+              res.writeHead(400, err.message, { 'Content-Type': 'text/plain' });
               res.send();
               console.error('Update Error ',err)  
               transaction.rollback();
@@ -598,7 +602,7 @@ exports.sql = (req, res) => {
             })
         })
           .catch(err => {
-          res.writeHead(409, err.message, { 'Content-Type': 'text/plain' });
+          res.writeHead(400, err.message, { 'Content-Type': 'text/plain' });
           res.send();
           console.error('Update Transaction Error ',err)  
           transaction.rollback();
@@ -624,7 +628,7 @@ exports.sql = (req, res) => {
           res.send(data);
         })
         .catch(err => {
-          res.writeHead(409, err.message, { 'Content-Type': 'text/plain' });
+          res.writeHead(400, err.message, { 'Content-Type': 'text/plain' });
           res.send();
         });
 
