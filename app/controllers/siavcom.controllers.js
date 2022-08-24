@@ -122,7 +122,7 @@ app/empresas/Demo/db.config.js
             const model = require(dir_emp + sistemas[i] + '/' + file)(sequelize, DataTypes);
 
             db[model.name] = model;
-            console.log('Siavcom controllers Sequalize Model===> ',model)
+            console.log('Siavcom controllers Sequalize Model===> ', model)
           });
       }
       Object.keys(db).forEach(modelName => {
@@ -171,7 +171,7 @@ app/empresas/Demo/db.config.js
 exports.sql = (req, res) => {
   // const conexion=this.conexion; 
   //console.log('Conexion Sql =====>', conexion)
-  const {id_con} = req.body; // Id de conexion   es lo mismo id_con=req.body.id_con
+  const { id_con } = req.body; // Id de conexion   es lo mismo id_con=req.body.id_con
 
 
   //{googggle, xcos, ...resultado} excluye objetos y en resultado que el objeto resultante
@@ -213,18 +213,20 @@ exports.sql = (req, res) => {
   let nom_vis = ''
   let nom_tab = ''
 
-  console.log('req ======>>>>>>>',req.body)
+  console.log('req ======>>>>>>>', req.body)
   if (req.body.nom_vis && req.body.nom_vis != null)
     nom_vis = req.body.nom_vis
   if (req.body.nom_tab && req.body.nom_tab != null)
     nom_tab = req.body.nom_tab
 
-  if (nom_tab=='') nom_tab=nom_vis
-    if (req.body.opciones && req.body.opciones.replacements) opciones['replacements'] = req.body.opciones.replacements
+  if (nom_tab == '') nom_tab = nom_vis
+  if (req.body.opciones && req.body.opciones.replacements) opciones['replacements'] = req.body.opciones.replacements
 
-  nom_tab=nom_tab.toLowerCase()
-  nom_vis=nom_vis.toLowerCase()
+  nom_tab = nom_tab.toLowerCase()
+  nom_tab = nom_tab.trim()
 
+  nom_vis = nom_vis.toLowerCase()
+  nom_vis = nom_vis.trim()
 
   //if (req.body.nom_vis) nom_vis = req.body.nom_vis.toLowerCase();  // Nombre de la vista indice a utilizar 
 
@@ -269,8 +271,9 @@ exports.sql = (req, res) => {
       break;
 
 
-    case 'USENODATA':  
+    case 'USENODATA':
       nom_vis = nom_vis.toLowerCase()
+
       ins_sql = "select * from vi_schema where nom_vis='" + nom_vis + "' order by con_dat"
 
       // buscar en la tabla de indices cual es la tabla a utilizar
@@ -285,7 +288,7 @@ exports.sql = (req, res) => {
             res.send();
             return false;
           }
-         // console.log('==USENODATA ===>', data[0][0])
+          // console.log('==USENODATA ===>', data[0][0])
           let tip_campo = '';
           let nom_campo = '';
           let val_campo = '';
@@ -300,12 +303,12 @@ exports.sql = (req, res) => {
           //let today=date+' '+today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
 
           // Definimos nuestra vista y asignamos el nombre dela tabla de mantenimiento
-          const view = { 
-            tip_obj :data[0][0].tip_obj,
+          const view = {
+            tip_obj: data[0][0].tip_obj,
             nom_tab: data[0][0].vac_vis,      // vista de actualizacion (mantenimiento) (anterior nom_tab)
             exp_where: data[0][0].wjs_vis,     //  wjs_vis=where javascript  sql_vis,   condicion where 
             exp_indice: '',                    // expresión  del indice
-            order:'',                          // orden de la tabla
+            ord_vis: data[0][0].ord_vis.trim().toLowerCase(),         // orden de la vista
             est_tabla: {},                     // estructura de la tabla
             new: [{}],                         // registro new
             old: [{}]                          //  regsitro old
@@ -319,8 +322,8 @@ exports.sql = (req, res) => {
 
             nom_campo = data[0][i].cam_dat.trim().toLowerCase(); // pasamos a minusculas
             tip_campo = data[0][i].tip_dat.toLowerCase().substring(0, 3);
-           val_defa = data[0][i].val_dat.trim()
-           // val_defa = data[0][i].vvu_dat.trim();  // valor vue
+            val_defa = data[0][i].val_dat.trim()
+            // val_defa = data[0][i].vvu_dat.trim();  // valor vue
 
             if (nom_campo == 'timestamp') {
               sw_timestamp = true
@@ -349,7 +352,7 @@ exports.sql = (req, res) => {
                 val_campo = '0'
                 break;
               case 'bit':
-                tip_campo = 'INT'
+                tip_campo = 'SMALLINT'
                 val_campo = '0'
                 break;
               case 'sma':
@@ -374,8 +377,14 @@ exports.sql = (req, res) => {
               case 'tsp':  // Timestamp MSSQL
                 tip_campo = 'TBD'
                 val_campo = null
+                break;
+              case 'bol':  // boolean Logico 1=verdadero 0=Falso
+                tip_campo = 'BOOLEAN'
+                val_campo = '0'
 
                 break;
+
+
               default:
                 tip_campo = 'STRING'
                 val_campo = "''"
@@ -413,7 +422,6 @@ exports.sql = (req, res) => {
 
           //   console.log('view.est_tabla Tabla===>',view.est_tabla)
           //console.log('Data===>',data[0][0])
-          view.ord_vis=data[0][0].ord_vis.trim().toLowerCase()         // orden de la vista
           let exp_ind = data[0][0].fil_vis.trim().toLowerCase();
 
           let con_ind = ''
@@ -423,30 +431,32 @@ exports.sql = (req, res) => {
           // console.log(' Use nodata Vista 1 model======>',data[0][0])
 
           while (pos > 0) {   // Recorremos todas las variables del indice
-              nom_cam = exp_ind.slice(0, pos);
-              if (view.tip_obj == 'MODEL') 
-                con_ind = con_ind + nom_cam + ' : m.' + nom_cam + ',';
-              if (view.tip_obj == 'VIEW') 
-                con_ind = con_ind +exp_ind+"=' ${m." + exp_ind+"}' and "
+            nom_cam = exp_ind.slice(0, pos);
+            if (view.tip_obj == 'MODEL')
+              con_ind = con_ind + nom_cam + ' : m.' + nom_cam + ',';
+            if (view.tip_obj == 'VIEW')
+              con_ind = con_ind + exp_ind + "=' ${m." + exp_ind + "}' and "
 
-              exp_ind = exp_ind.substring(pos + 1); 
-              pos = exp_ind.indexOf(',')
+            exp_ind = exp_ind.substring(pos + 1);
+            pos = exp_ind.indexOf(',')
 
-           //   console.log(' Use nodata Vista 1 ======>exp_ind=',exp_ind,'con_ind='+ con_ind,'nom_cam='+nom_cam)
+            //   console.log(' Use nodata Vista 1 ======>exp_ind=',exp_ind,'con_ind='+ con_ind,'nom_cam='+nom_cam)
 
-            }
-            if (exp_ind.length > 0) {
-              if (view.tip_obj == 'MODEL') 
-                con_ind = ' { ' + con_ind + exp_ind + ': m.' + exp_ind + '}'
-              if (view.tip_obj == 'VIEW') 
-               con_ind ="`"+con_ind + exp_ind + "= '${m." + exp_ind+"}'"+"`"
+          }
+          if (exp_ind.length > 0) {
+            if (view.tip_obj == 'MODEL')
+              con_ind = ' { ' + con_ind + exp_ind + ': m.' + exp_ind + '}'
+            if (view.tip_obj == 'VIEW')
+              con_ind = "`" + con_ind + exp_ind + "= '${m." + exp_ind + "}'" + "`"
 
           }
 
           view.exp_indice = con_ind // Indice a utilizar
-          
+
           //console.log(' Use nodata Vista ======>',nom_vis,data[0][0].fil_vis.trim().toLowerCase(),'Cond Indice==>'+ con_ind)
           //console.log('===================================================================== ')
+          console.log('USENODATA ===>', view)
+
 
           res.send(view); // enviamos la vista
           return
@@ -491,7 +501,7 @@ exports.sql = (req, res) => {
 
         return;
       }
-
+      console.log('INSERT datos ========>', datos)
       db.sequelize.transaction({ autocommit: false })
         .then(transaction => {
           db[nom_tab].create(datos, {
@@ -511,7 +521,7 @@ exports.sql = (req, res) => {
                   res.send(data);
                 })
                 .catch(err => {     // Error al leer el TimeStamp
-                  console.error('Insert commit Error',err)
+                  console.error('Insert commit Error', err)
                   transaction.rollback();
                   res.writeHead(400, err.message, { 'Content-Type': 'text/plain' });
                   res.send();
@@ -520,7 +530,7 @@ exports.sql = (req, res) => {
               //res.send(data);
             })
             .catch(err => {
-              console.error('Insert Error ',err)
+              console.error('Insert Error ', err)
               transaction.rollback();
               res.writeHead(400, err.message, { 'Content-Type': 'text/plain' });
               res.send();
@@ -528,7 +538,7 @@ exports.sql = (req, res) => {
             });
         })
         .catch(err => {     // Error al leer el modelo en  sequelize
-          console.error('Insert transaction Error',err)
+          console.error('Insert transaction Error', err)
           transaction.rollback();
           res.writeHead(400, err.message, { 'Content-Type': 'text/plain' });
           res.send();
@@ -555,14 +565,14 @@ exports.sql = (req, res) => {
 
 
       const key_pri = datos.key_pri;
-                  // aqui voy
+      // aqui voy
       delete datos['key_pri']   // borramos el key pri de los datos a actualizar
       delete datos['val_vista'];
       console.log('========== Objeto datos a actualizar =======>', datos);
 
       db.sequelize.transaction({ autocommit: false })
         .then(transaction => {
-          console.log('========== Comienza transaction =======',nom_tab);
+          console.log('========== Comienza transaction =======', nom_tab);
 
           db[nom_tab].update(datos, {
             where: { key_pri: key_pri },
@@ -576,19 +586,19 @@ exports.sql = (req, res) => {
               // Obtiene el timestamp actual
               db[nom_tab].findAll({  // busca el timestamp 
                 attributes: ['timestamp'],
-                where: { key_pri: key_pri }, 
+                where: { key_pri: key_pri },
                 transaction: transaction
               })
-                .then(data_key => {  // envia el timestamp
+                .then(timestamp => {  // envia el timestamp
                   transaction.commit();
-                  res.send(data_key);
+                  res.send(timestamp);
                 })
                 .catch(err => {     // Error al leer el TimeStamp
                   res.writeHead(400, err.message, { 'Content-Type': 'text/plain' });
                   res.send();
-                  console.error('Update Commit Error' ,err)  
+                  console.error('Update Commit Error', err)
                   transaction.rollback();
- 
+
                 });
               ///////////////////
               //res.send(data);
@@ -596,15 +606,15 @@ exports.sql = (req, res) => {
             .catch(err => {
               res.writeHead(400, err.message, { 'Content-Type': 'text/plain' });
               res.send();
-              console.error('Update Error ',err)  
+              console.error('Update Error ', err)
               transaction.rollback();
 
             })
         })
-          .catch(err => {
+        .catch(err => {
           res.writeHead(400, err.message, { 'Content-Type': 'text/plain' });
           res.send();
-          console.error('Update Transaction Error ',err)  
+          console.error('Update Transaction Error ', err)
           transaction.rollback();
 
         });
@@ -621,17 +631,35 @@ exports.sql = (req, res) => {
         return;
       }
 
+      db[nom_tab].findOne(condicion). //Busca si todavia existe el renglon
+        then(row => {
+          row.destroy() // deletes the row
+            .then(data => {
+              console.log('DELETE  data=====>',data)
+              // res.sendStatus();
+            })
+            .catch(err => {
+              console.log('DELETE error===>', err)
+              res.writeHead(400, err.message, { 'Content-Type': 'text/plain' });
+              res.sendStatus(err);
+            });
 
-
-      db[nom_tab].destroy(condicion)
-        .then(data => {
-          res.send(data);
         })
-        .catch(err => {
-          res.writeHead(400, err.message, { 'Content-Type': 'text/plain' });
-          res.send();
-        });
 
+
+      /*
+            delete condicion.atributes
+            console.log('DELETE condicion =====',condicion)
+            db[nom_tab].destroy(condicion)
+              .then(data => {
+                res.sendStatus(data);
+              })
+              .catch(err => {
+                console.log('DELETE error===>',err)
+                res.writeHead(400, err.message, { 'Content-Type': 'text/plain' });
+                res.sendStatus(err);
+              });
+      */
       break;
     // aqui me quede
     case 'GETDEF':  // Obttine la definicion de la tabla o la vistas
@@ -639,7 +667,7 @@ exports.sql = (req, res) => {
       ////////////////////////////////////////////////////////////////////////////////
       //opciones.model = true
 
-      ins_sql = "select COLUMN_NAME,DATA_TYPE from INFORMATION_SCHEMA.COLUMNS where lower(TABLE_NAME) ='" + ins_sql+"'"
+      ins_sql = "select COLUMN_NAME,DATA_TYPE from INFORMATION_SCHEMA.COLUMNS where lower(TABLE_NAME) ='" + ins_sql + "'"
       console.log('GETDEF =============', ins_sql)
 
       //      db.sequelize.query(ins_sql, { type: db.sequelize.QueryTypes.SELECT })
@@ -647,7 +675,7 @@ exports.sql = (req, res) => {
 
         .then(function (result) {
 
-          console.log('GETDEF===>',result)
+          console.log('GETDEF===>', result)
           if (result.length > 0) {
             for (var i = 0; i < result.length; i++) {
 
@@ -662,7 +690,7 @@ exports.sql = (req, res) => {
               }
 
               tip_campo = tip_campo.substr(0, 3).toUpperCase()
-              console.log('GETDEF tip_camp ====>',tip_campo)
+              console.log('GETDEF tip_camp ====>', tip_campo)
 
               switch
               (tip_campo) {
@@ -687,7 +715,7 @@ exports.sql = (req, res) => {
                   val_campo = 0
                   break;
                 case 'BIT':
-                  tip_campo = 'INT'
+                  tip_campo = 'SMALLINT'
                   val_campo = 0
                   break;
                 case 'SMA':
@@ -777,7 +805,7 @@ exports.sql = (req, res) => {
       /////////////////////////
       db.sequelize.query(ins_sql, opciones)
         .then(data => {
-          // console.log('sqlexec resultado===>', data[1])
+          console.log('<=========query resultado===>', data)
           res.send(data[0]);
         })
         .catch(err => {
