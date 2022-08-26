@@ -433,7 +433,8 @@ exports.sql = (req, res) => {
           while (pos > 0) {   // Recorremos todas las variables del indice
             nom_cam = exp_ind.slice(0, pos);
             if (view.tip_obj == 'MODEL')
-              con_ind = con_ind + nom_cam + ' : m.' + nom_cam + ',';
+               con_ind = con_ind + nom_cam + ' :  ${m.' + nom_cam +'},'
+            //              con_ind = con_ind + nom_cam + ' : m.' + nom_cam + ',';
             if (view.tip_obj == 'VIEW')
               con_ind = con_ind + exp_ind + "=' ${m." + exp_ind + "}' and "
 
@@ -445,10 +446,10 @@ exports.sql = (req, res) => {
           }
           if (exp_ind.length > 0) {
             if (view.tip_obj == 'MODEL')
-              con_ind = ' { ' + con_ind + exp_ind + ': m.' + exp_ind + '}'
+              con_ind = '`{' + con_ind + exp_ind + ': ${m.' + exp_ind + '}}`' 
+            //  con_ind = ' { ' + con_ind + exp_ind + ': m.' + exp_ind + '}'
             if (view.tip_obj == 'VIEW')
               con_ind = "`" + con_ind + exp_ind + "= '${m." + exp_ind + "}'" + "`"
-
           }
 
           view.exp_indice = con_ind // Indice a utilizar
@@ -501,23 +502,24 @@ exports.sql = (req, res) => {
 
         return;
       }
-      console.log('INSERT datos ========>', datos)
+      //console.log('INSERT datos ========>', datos,condicion)
       db.sequelize.transaction({ autocommit: false })
         .then(transaction => {
           db[nom_tab].create(datos, {
             returning: true,
             plain: true,
-            transaction: transaction
+            transaction: transaction,
+            validate: true 
           })
             .then((result) => {
-
               // Obtiene el timestamp y key_pri actual
-              condicion.atributes = ['timestamp', 'key_pri'];
-              console.log('==========Condicion insercion =======', condicion);
+              transaction.commit();
+              condicion.atributes=['key_pri','timestamp']
+              console.log('================ datos insertados  condicion >>>>>',result, condicion)
               db[nom_tab].findAll(condicion)
                 .then(data => {
+                  console.log('======== datos insertados leidos =======', data);
                   // envia el timestamp
-                  transaction.commit();
                   res.send(data);
                 })
                 .catch(err => {     // Error al leer el TimeStamp
@@ -630,7 +632,7 @@ exports.sql = (req, res) => {
         res.send();
         return;
       }
-
+      /*
       db[nom_tab].findOne(condicion). //Busca si todavia existe el renglon
         then(row => {
           row.destroy() // deletes the row
@@ -646,20 +648,21 @@ exports.sql = (req, res) => {
 
         })
 
-
-      /*
+      */ 
+      
             delete condicion.atributes
-            console.log('DELETE condicion =====',condicion)
             db[nom_tab].destroy(condicion)
               .then(data => {
-                res.sendStatus(data);
+                console.log('DELETE condicion =====',condicion,data)
+                data={result:true}
+                res.send(data);
               })
               .catch(err => {
                 console.log('DELETE error===>',err)
                 res.writeHead(400, err.message, { 'Content-Type': 'text/plain' });
                 res.sendStatus(err);
               });
-      */
+      
       break;
     // aqui me quede
     case 'GETDEF':  // Obttine la definicion de la tabla o la vistas
