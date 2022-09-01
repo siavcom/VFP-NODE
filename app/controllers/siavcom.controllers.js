@@ -516,7 +516,14 @@ exports.sql = (req, res) => {
               transaction.commit();
               condicion.atributes=['key_pri','timestamp']
               console.log('================ datos insertados  condicion >>>>>',result, condicion)
-              db[nom_tab].findAll(condicion)
+              db[nom_tab].findAll(
+            
+              { 
+                attributes: ['timestamp','key_pri'],
+                where: condicion.where
+              })
+            
+              // db[nom_tab].findAll(condicion)
                 .then(data => {
                   console.log('======== datos insertados leidos =======', data);
                   // envia el timestamp
@@ -582,18 +589,20 @@ exports.sql = (req, res) => {
             plain: true,
             transaction: transaction
           })
+
+        
             // db[nom_vis].upsert(dat_act, condicion)
             .then((result) => {
-              console.log('==========Dato actualizado=======>>>>', result) // aqui voy , checar el resultado
+              transaction.commit()
               // Obtiene el timestamp actual
               db[nom_tab].findAll({  // busca el timestamp 
                 attributes: ['timestamp'],
-                where: { key_pri: key_pri },
-                transaction: transaction
+                where: { key_pri: key_pri }
               })
                 .then(timestamp => {  // envia el timestamp
-                  transaction.commit();
+                  console.log('==========Dato actualizado timestamp=======>>>>', timestamp) // aqui voy , checar el resultado
                   res.send(timestamp);
+                  
                 })
                 .catch(err => {     // Error al leer el TimeStamp
                   res.writeHead(400, err.message, { 'Content-Type': 'text/plain' });
