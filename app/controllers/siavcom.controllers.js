@@ -217,7 +217,7 @@ exports.sql = (req, res) => {
   if (req.body.nom_vis && req.body.nom_vis != null)
     nom_vis = req.body.nom_vis
   if (req.body.nom_tab && req.body.nom_tab != null)
-    nom_tab = req.body.nom_tab
+    nom_tab = req.body.nom_tab.trim()
 
   if (nom_tab == '') nom_tab = nom_vis
   if (req.body.opciones && req.body.opciones.replacements) opciones['replacements'] = req.body.opciones.replacements
@@ -433,7 +433,7 @@ exports.sql = (req, res) => {
           while (pos > 0) {   // Recorremos todas las variables del indice
             nom_cam = exp_ind.slice(0, pos);
             if (view.tip_obj == 'MODEL')
-               con_ind = con_ind + nom_cam + ' :  ${m.' + nom_cam +'},'
+              con_ind = con_ind + nom_cam + ' :  ${m.' + nom_cam + '},'
             //              con_ind = con_ind + nom_cam + ' : m.' + nom_cam + ',';
             if (view.tip_obj == 'VIEW')
               con_ind = con_ind + exp_ind + "=' ${m." + exp_ind + "}' and "
@@ -446,7 +446,7 @@ exports.sql = (req, res) => {
           }
           if (exp_ind.length > 0) {
             if (view.tip_obj == 'MODEL')
-              con_ind = '`{' + con_ind + exp_ind + ': ${m.' + exp_ind + '}}`' 
+              con_ind = '`{' + con_ind + exp_ind + ': ${m.' + exp_ind + '}}`'
             //  con_ind = ' { ' + con_ind + exp_ind + ': m.' + exp_ind + '}'
             if (view.tip_obj == 'VIEW')
               con_ind = "`" + con_ind + exp_ind + "= '${m." + exp_ind + "}'" + "`"
@@ -509,21 +509,21 @@ exports.sql = (req, res) => {
             returning: true,
             plain: true,
             transaction: transaction,
-            validate: true 
+            validate: true
           })
             .then((result) => {
               // Obtiene el timestamp y key_pri actual
               transaction.commit();
-              condicion.atributes=['key_pri','timestamp']
-              console.log('================ datos insertados  condicion >>>>>',result, condicion)
+              condicion.atributes = ['key_pri', 'timestamp']
+              console.log('================ datos insertados  condicion >>>>>', result, condicion)
               db[nom_tab].findAll(
-            
-              { 
-                attributes: ['timestamp','key_pri'],
-                where: condicion.where
-              })
-            
-              // db[nom_tab].findAll(condicion)
+
+                {
+                  attributes: ['timestamp', 'key_pri'],
+                  where: condicion.where
+                })
+
+                // db[nom_tab].findAll(condicion)
                 .then(data => {
                   console.log('======== datos insertados leidos =======', data);
                   // envia el timestamp
@@ -590,7 +590,7 @@ exports.sql = (req, res) => {
             transaction: transaction
           })
 
-        
+
             // db[nom_vis].upsert(dat_act, condicion)
             .then((result) => {
               transaction.commit()
@@ -602,7 +602,7 @@ exports.sql = (req, res) => {
                 .then(timestamp => {  // envia el timestamp
                   console.log('==========Dato actualizado timestamp=======>>>>', timestamp) // aqui voy , checar el resultado
                   res.send(timestamp);
-                  
+
                 })
                 .catch(err => {     // Error al leer el TimeStamp
                   res.writeHead(400, err.message, { 'Content-Type': 'text/plain' });
@@ -657,21 +657,21 @@ exports.sql = (req, res) => {
 
         })
 
-      */ 
-      
-            delete condicion.atributes
-            db[nom_tab].destroy(condicion)
-              .then(data => {
-                console.log('DELETE condicion =====',condicion,data)
-                data={result:true}
-                res.send(data);
-              })
-              .catch(err => {
-                console.log('DELETE error===>',err)
-                res.writeHead(400, err.message, { 'Content-Type': 'text/plain' });
-                res.sendStatus(err);
-              });
-      
+      */
+
+      delete condicion.atributes
+      db[nom_tab].destroy(condicion)
+        .then(data => {
+          console.log('DELETE condicion =====', condicion, data)
+          data = { result: true }
+          res.send(data);
+        })
+        .catch(err => {
+          console.log('DELETE error===>', err)
+          res.writeHead(400, err.message, { 'Content-Type': 'text/plain' });
+          res.sendStatus(err);
+        });
+
       break;
     // aqui me quede
     case 'GETDEF':  // Obttine la definicion de la tabla o la vistas
@@ -797,28 +797,124 @@ exports.sql = (req, res) => {
       opciones.mapToModel = true
       console.log('SQLEXEC opciones====>>>>', ins_sql, opciones)
 
-      /*
-            if (!condicion) {
-              res.writeHead(400,"No hay QUERY para procesar",{'Content-Type': 'text/plain'});
-              res.send();
-              return;
-            }
-      */
-
-      ////////////////////////////////////////////////////////////////////////////////
-      /*
-      db.sequelize.query(ins_sql, {type: models.sequelize.QueryTypes.SELECT}).then(function(result){
-              if(result.length > 0)
-                console.log('Resultado===>',result)
-               //  return  callback(result[0].DATA_TYPE, result[0].CHARACTER_MAXIMUM_LENGTH);
-             // callback(false, false)
-            })
-       */
-      /////////////////////////
       db.sequelize.query(ins_sql, opciones)
         .then(data => {
           console.log('<=========query resultado===>', data)
           res.send(data[0]);
+        })
+        .catch(err => {
+          console.log('No se pudo ejecutar ==', err)
+          res.writeHead(400, "SQL ERROR " + ins_sql, { 'Content-Type': 'text/plain' });
+          res.send();
+        });
+
+      break;
+
+    case 'GENTABLA':
+
+      opciones.mapToModel = true
+
+      // se pasa el nombre de la tabla y si es posgres o MSSQL
+
+      ins_sql = `select F_gen_tabla('${nom_tab}','${options.query}') as query`
+      var resultado = []
+      db.sequelize.query(ins_sql, opciones)
+        .then(data => {
+          console.log('<========= f_gen_tabla===>', data)
+          resultado = data[0].query;
+          db.sequelize.query(resultado, opciones)
+            .then(data => {
+              console.log('<=========TABLA GENERADA =======>', data)
+              res.send(data[0]);
+            })
+            .catch(err => {
+              console.log('No se pudo ejecutar ==', err)
+              res.writeHead(400, "SQL ERROR " + ins_sql, { 'Content-Type': 'text/plain' });
+              res.send();
+            });
+        })
+        .catch(err => {
+          console.log('No se pudo ejecutar ==', err)
+          res.writeHead(400, "SQL ERROR " + ins_sql, { 'Content-Type': 'text/plain' });
+          res.send();
+        });
+
+      break;
+
+    case 'GENINDICES':
+
+      opciones.mapToModel = true
+      // se pasa el nombre de la tabla y si es posgres o MSSQL
+
+      ins_sql = `select F_gen_indices('${nom_tab}','${options.query}') as query`
+      var resultado = []
+      db.sequelize.query(ins_sql, opciones)
+        .then(data => {
+          console.log('<========= f_gen_indices===>', data)
+          resultado = data[0].query;
+          db.sequelize.query(resultado, opciones)
+            .then(data => {
+              console.log('<=========query GENERA INDICES=======>', data)
+              res.send(data[0]);
+            })
+            .catch(err => {
+              console.log('No se pudo ejecutar ==', err)
+              res.writeHead(400, "SQL ERROR " + ins_sql, { 'Content-Type': 'text/plain' });
+              res.send();
+            });
+        })
+        .catch(err => {
+          console.log('No se pudo ejecutar ==', err)
+          res.writeHead(400, "SQL ERROR " + ins_sql, { 'Content-Type': 'text/plain' });
+          res.send();
+        });
+
+      break;
+
+
+    case 'GENVISTAS':
+      opciones.mapToModel = true
+
+      // se pasa el nombre de la tabla y si es posgres o MSSQL
+
+      ins_sql = `select F_gen_vistas('${nom_tab}','${options.query}') as query`
+      var resultado = ''
+      db.sequelize.query(ins_sql, opciones)
+        .then(data => {
+          console.log('<========= f_gen_vistas===>', data)
+          resultado = data[0].query;
+          db.sequelize.query(resultado, opciones)
+            .then(data => {
+              console.log('<=========query GENERA vistas=======>', data)
+              res.send(data[0]);
+            })
+            .catch(err => {
+              console.log('No se pudo ejecutar ==', err)
+              res.writeHead(400, "SQL ERROR " + ins_sql, { 'Content-Type': 'text/plain' });
+              res.send();
+            });
+        })
+        .catch(err => {
+          console.log('No se pudo ejecutar ==', err)
+          res.writeHead(400, "SQL ERROR " + ins_sql, { 'Content-Type': 'text/plain' });
+          res.send();
+        });
+
+      break;
+
+    case 'GENMODELO':
+      opciones.mapToModel = true
+
+      ins_sql = `select F_gen_modelo('${nom_tab}','${options.query}') as query`
+      var resultado = ''
+      db.sequelize.query(ins_sql, opciones)
+        .then(data => {
+          resultado = data[0].query;
+          const resultado = data[0].query
+          const fs = require('fs');
+          const result = fs.writeFileSync(dir_emp + '/models/' + nom_tab + '.js', resultado);
+          console.log('<=========SE GENERO MODEL=======>', result)
+          res.send(data[0].query);
         })
         .catch(err => {
           console.log('No se pudo ejecutar ==', err)
@@ -834,14 +930,10 @@ exports.sql = (req, res) => {
   }
 
 
-
-
-
 };
 
 /////////////////////////////////////////////////////////////////
 //////  Funciones ///////////////////////////////////////
-
 
 function base64(source) {
   // Encode in classical base64
