@@ -75,6 +75,7 @@ app/empresas/Demo/db.config.js
 
   let dir_emp = process.cwd() + '/app/empresas/' + nom_emp // directorio de empresas 
   options = require(dir_emp + '/db.config.js') //[env] // crea el archivo de env
+  console.log('Lee empresa options', options)
   //console.log('Lee archivo de configuracion====>>>',options)
   if (!options) {
     res.writeHead(400, 'No existe empresa', { 'Content-Type': 'text/plain' });
@@ -816,28 +817,73 @@ exports.sql = (req, res) => {
 
       // se pasa el nombre de la tabla y si es posgres o MSSQL
 
-      ins_sql = `select F_gen_tabla('${nom_tab}','${options.query}') as query`
-      var resultado = []
-      db.sequelize.query(ins_sql, opciones)
+      ins_sql = `select F_gen_tabla('${options.dialect}','${nom_tab}') as query`
+      var query = ''
+      db.sequelize.query(ins_sql)
         .then(data => {
-          console.log('<========= f_gen_tabla===>', data)
-          resultado = data[0].query;
-          db.sequelize.query(resultado, opciones)
+          query = data[0][0].query
+
+          db.sequelize.query(query)
             .then(data => {
               console.log('<=========TABLA GENERADA =======>', data)
-              res.send(data[0]);
+              ins_sql = `select F_gen_vista_man('${options.dialect}','${nom_tab}') as query `
+              db.sequelize.query(ins_sql)
+                .then(data => {
+                  query = data[0][0].query
+                  db.sequelize.query(query)
+                    .then(data => {
+                      console.log('<=========VISTA DE MTO GENERADA =======>', data)
+                      ins_sql = `select F_gen_trigger_fun('${options.dialect}','${nom_tab}') as query`
+                      db.sequelize.query(ins_sql)
+                        .then(data => {
+                          console.log('<========= SCRIPT FUNCION DE MTO GENERADA =======>', data)
+                          query = data[0][0].query
+                          db.sequelize.query(query)
+                            .then(data => {
+                              console.log('<========= FUNCION DE MTO GENERADA =======>', data)
+                              ins_sql = `select F_gen_trigger_man('${options.dialect}','${nom_tab}') as query`
+                              db.sequelize.query(ins_sql)
+                                .then(data => {
+                                  console.log('<========= SCRIPT trigger DE MTO GENERADA =======>', data)
+                                  query = data[0][0].query
+                                  db.sequelize.query(query)
+                                    .then(data => {
+                                      console.log('<=========TRIGGER GENERADO =======>', data)
+                                      res.send(data[0])
+                                      return
+                                    })
+                                })
+                            })
+                        })
+                        .catch(err => {
+                          console.log('No se pudo ejecutar ==', err)
+                          res.writeHead(400, "SQL ERROR " + ins_sql, { 'Content-Type': 'text/plain' });
+                          res.send();
+                        });
+                    })
+                    .catch(err => {
+                      console.log('No se pudo ejecutar ==', err)
+                      res.writeHead(400, "SQL ERROR " + ins_sql, { 'Content-Type': 'text/plain' });
+                      res.send();
+                    });
+                })
+                .catch(err => {
+                  console.log('No se pudo ejecutar ==', err)
+                  res.writeHead(400, "SQL ERROR " + ins_sql, { 'Content-Type': 'text/plain' });
+                  res.send();
+                })
             })
             .catch(err => {
               console.log('No se pudo ejecutar ==', err)
               res.writeHead(400, "SQL ERROR " + ins_sql, { 'Content-Type': 'text/plain' });
               res.send();
-            });
+            })
         })
         .catch(err => {
           console.log('No se pudo ejecutar ==', err)
           res.writeHead(400, "SQL ERROR " + ins_sql, { 'Content-Type': 'text/plain' });
           res.send();
-        });
+        })
 
       break;
 
@@ -846,13 +892,13 @@ exports.sql = (req, res) => {
       opciones.mapToModel = true
       // se pasa el nombre de la tabla y si es posgres o MSSQL
 
-      ins_sql = `select F_gen_indices('${nom_tab}','${options.query}') as query`
-      var resultado = []
+      ins_sql = `select F_gen_indices(,'${options.dialect}','${nom_tab}') as query`
+      var query = ''
       db.sequelize.query(ins_sql, opciones)
         .then(data => {
           console.log('<========= f_gen_indices===>', data)
-          resultado = data[0].query;
-          db.sequelize.query(resultado, opciones)
+          query = data[0][0].query
+          db.sequelize.query(query)
             .then(data => {
               console.log('<=========query GENERA INDICES=======>', data)
               res.send(data[0]);
@@ -872,20 +918,20 @@ exports.sql = (req, res) => {
       break;
 
 
-    case 'GENVISTAS':
+    case 'GENVISTASSQL':
       opciones.mapToModel = true
 
       // se pasa el nombre de la tabla y si es posgres o MSSQL
 
-      ins_sql = `select F_gen_vistas('${nom_tab}','${options.query}') as query`
+      ins_sql = `select F_gen_vistas_sql('${options.dialect}','${nom_tab}',) as query`
       var resultado = ''
       db.sequelize.query(ins_sql, opciones)
         .then(data => {
-          console.log('<========= f_gen_vistas===>', data)
+          console.log('<========= f_gen_vistas_sql===>', data)
           resultado = data[0].query;
           db.sequelize.query(resultado, opciones)
             .then(data => {
-              console.log('<=========query GENERA vistas=======>', data)
+              console.log('<=========Vistas SQL Generada=======>', data)
               res.send(data[0]);
             })
             .catch(err => {
@@ -905,7 +951,7 @@ exports.sql = (req, res) => {
     case 'GENMODELO':
       opciones.mapToModel = true
 
-      ins_sql = `select F_gen_modelo('${nom_tab}','${options.query}') as query`
+      ins_sql = `select F_gen_modelo('${options.dialect}','${nom_tab}') as query`
       var resultado = ''
       db.sequelize.query(ins_sql, opciones)
         .then(data => {
