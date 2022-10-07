@@ -1,5 +1,5 @@
-nodemon server.js   Automaticamente recompila
-nodemon server.js   Corre en Node server 
+nodemon server_nue.js   Automaticamente recompila
+nodemon server_nue.js   Corre en Node server 
 
 
 nodemon server_nue.js 22/Oct/2021

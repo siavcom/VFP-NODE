@@ -73,7 +73,8 @@ app/empresas/Demo/db.config.js
   */         //app/empresas/Demo/models/come
   //console.log("Current working directory  : " + process.cwd());
 
-  let dir_emp = process.cwd() + '/app/empresas/' + nom_emp // directorio de empresas 
+  var dir_emp = process.cwd() + '/app/empresas/' + nom_emp // directorio de empresas 
+  
   options = require(dir_emp + '/db.config.js') //[env] // crea el archivo de env
   console.log('Lee empresa options', options)
   //console.log('Lee archivo de configuracion====>>>',options)
@@ -85,6 +86,7 @@ app/empresas/Demo/db.config.js
 
   options['username'] = user
   options['password'] = pass
+  options['dir_emp']=dir_emp
   // console.log('Config de conexion =====>>>', options);
 
 
@@ -144,7 +146,8 @@ app/empresas/Demo/db.config.js
       conexion[name] = {
         timestamp: fec_act,
         empresa: nom_emp,
-        db: db
+        db: db,
+        dir_emp:dir_emp,
       }
 
       // module.exports.conexion 
@@ -172,6 +175,8 @@ app/empresas/Demo/db.config.js
 exports.sql = (req, res) => {
   // const conexion=this.conexion; 
   //console.log('Conexion Sql =====>', conexion)
+
+
   const { id_con } = req.body; // Id de conexion   es lo mismo id_con=req.body.id_con
 
 
@@ -199,6 +204,8 @@ exports.sql = (req, res) => {
   }
 
   const db = conexion[id_con].db // asignamos el objeto de base de datos
+  const dir_emp=conexion[id_con].dir_emp
+
 
   //console.log('Base de datos',db)
   // console.log('db a utilizar=====>',db)
@@ -849,11 +856,44 @@ exports.sql = (req, res) => {
                                   db.sequelize.query(query)
                                     .then(data => {
                                       console.log('<=========TRIGGER GENERADO =======>', data)
-                                      res.send(data[0])
-                                      return
+                                      ////////////////////
+                                      ins_sql = `select F_gen_modelo(nom_ind) as query,nom_ind from comeind where lower(nom_tab)=lower('${nom_tab}') and num_ind=1 `
+                                      db.sequelize.query(ins_sql)
+                                        .then(data => {
+ 
+                                          query = data[0][0].query
+                                          const nom_ind=data[0][0].nom_ind
+                                          const modelo=dir_emp+nom_ind+'.js'
+                                          console.log('<=========Escribe MODELO  Node Server=======>',modelo, query)
+                                          const fs = require('fs')
+/*                                          
+                                          fs.writeFile(modelo, query, (err) => {
+                                           if (err) throw err;
+                                          });
+*/
+                                          fs.writeFile(modelo, query)
+                                           //graba en el servidor node
+                                          res.send(data[0])
+                                          return
+
+                                        })
+
+                                      ///////////////////////////////////
+
                                     })
                                 })
+
+                                .catch(err => {
+                                  console.log('No se pudo ejecutar ==', err)
+                                  res.writeHead(400, "SQL ERROR " + ins_sql, { 'Content-Type': 'text/plain' });
+                                  res.send();
+                                });
                             })
+                            .catch(err => {
+                              console.log('No se pudo ejecutar ==', err)
+                              res.writeHead(400, "SQL ERROR " + ins_sql, { 'Content-Type': 'text/plain' });
+                              res.send();
+                            });
                         })
                         .catch(err => {
                           console.log('No se pudo ejecutar ==', err)

@@ -11,6 +11,7 @@ module.exports = function(sequelize, DataTypes) {
 'tpr_prg': {type: DataTypes.CHAR(1),allowNull: false,defaultValue: ' ',comment: 'TIPO DE PROGRAMA M=MANTENIMIENTO; R=REPORTE; P=PROCESO' },
 'fac_prg': {type: DataTypes.DATE,allowNull: false,comment: 'FECHA ULTIMA ACTUALIZACION' },
 'frm_prg': {type: DataTypes.TEXT,allowNull: true,comment: 'FORMATO' },
+'ico_prg': {type: DataTypes.CHAR(254),allowNull: true,comment: 'icono' },
 'tie_uac': {type: DataTypes.DATE,allowNull: true,comment: 'FECHA DE LA ULTIMA ACTUALIZACION' },
 'tie_cre': {type: DataTypes.DATE,allowNull: true,comment: 'TIEMPO DE CREACION' },
 'usu_usu': {type: DataTypes.SMALLINT,allowNull: true,defaultValue: '0',comment: 'USUARIO' },
