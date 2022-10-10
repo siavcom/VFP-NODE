@@ -74,7 +74,7 @@ app/empresas/Demo/db.config.js
   //console.log("Current working directory  : " + process.cwd());
 
   var dir_emp = process.cwd() + '/app/empresas/' + nom_emp // directorio de empresas 
-  
+
   options = require(dir_emp + '/db.config.js') //[env] // crea el archivo de env
   console.log('Lee empresa options', options)
   //console.log('Lee archivo de configuracion====>>>',options)
@@ -86,7 +86,7 @@ app/empresas/Demo/db.config.js
 
   options['username'] = user
   options['password'] = pass
-  options['dir_emp']=dir_emp
+  options['dir_emp'] = dir_emp
   // console.log('Config de conexion =====>>>', options);
 
 
@@ -112,7 +112,8 @@ app/empresas/Demo/db.config.js
 
 
       // const sistemas = ['come', 'cont', 'dist', 'logi', 'mnto']  // poner todos los sistetemas 
-      const sistemas = ['come']  // poner todos los sistemas 
+      //      const sistemas = ['come']  // poner todos los sistemas 
+      const sistemas = ['files']  // poner todos los sistemas 
 
       for (i = 0; i < sistemas.length; i++) {
         fs // Revisa los archivos que se generaron en la carpeta, para representar la información de los modelos
@@ -147,7 +148,7 @@ app/empresas/Demo/db.config.js
         timestamp: fec_act,
         empresa: nom_emp,
         db: db,
-        dir_emp:dir_emp,
+        dir_emp: dir_emp,
       }
 
       // module.exports.conexion 
@@ -204,7 +205,7 @@ exports.sql = (req, res) => {
   }
 
   const db = conexion[id_con].db // asignamos el objeto de base de datos
-  const dir_emp=conexion[id_con].dir_emp
+  const dir_emp = conexion[id_con].dir_emp
 
 
   //console.log('Base de datos',db)
@@ -854,74 +855,73 @@ exports.sql = (req, res) => {
                                   console.log('<========= SCRIPT trigger DE MTO GENERADA =======>', data)
                                   query = data[0][0].query
                                   db.sequelize.query(query)
-                                    .then(data => {
+                                    .then(async data => {
+                                      let result = ''
                                       console.log('<=========TRIGGER GENERADO =======>', data)
-                                      ////////////////////
-                                      ins_sql = `select F_gen_modelo(nom_ind) as query,nom_ind from comeind where lower(nom_tab)=lower('${nom_tab}') and num_ind=1 `
-                                      db.sequelize.query(ins_sql)
-                                        .then(data => {
- 
-                                          query = data[0][0].query
-                                          const nom_ind=data[0][0].nom_ind
-                                          const modelo=dir_emp+nom_ind+'.js'
-                                          console.log('<=========Escribe MODELO  Node Server=======>',modelo, query)
-                                          const fs = require('fs')
-/*                                          
-                                          fs.writeFile(modelo, query, (err) => {
-                                           if (err) throw err;
-                                          });
-*/
-                                          fs.writeFile(modelo, query)
-                                           //graba en el servidor node
-                                          res.send(data[0])
-                                          return
 
-                                        })
+                                      //const promesa = genModel(nom_tab, db, dir_emp)
 
-                                      ///////////////////////////////////
+                                      genModel(nom_tab, db, dir_emp)
+                                        .then((data) => {
 
-                                    })
-                                })
+                                          if (data == 'Ok') {
+                                            res.send('Se genero tabla ' + nom_tab);
+                                          }
+                                          else {
+                                            res.writeHead(400, "SQL ERROR " + res, { 'Content-Type': 'text/plain' });
+                                            res.send();
+                                          }
+                                        }) //  Fin promesa
+                                        .catch(err => {
+                                          console.log('No se pudo generar MODEL ', err)
+                                          res.writeHead(400, "NODE ERROR :" + err, { 'Content-Type': 'text/plain' });
+                                          res.send();
+                                        });
+
+
+
+                                    }) // trigger generado
+                                }) // trigger de mto generado
 
                                 .catch(err => {
                                   console.log('No se pudo ejecutar ==', err)
-                                  res.writeHead(400, "SQL ERROR " + ins_sql, { 'Content-Type': 'text/plain' });
+                                  res.writeHead(400, "query :" + ins_sql+' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
                                   res.send();
                                 });
                             })
                             .catch(err => {
                               console.log('No se pudo ejecutar ==', err)
-                              res.writeHead(400, "SQL ERROR " + ins_sql, { 'Content-Type': 'text/plain' });
+                              res.writeHead(400, "query :" + ins_sql+' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
                               res.send();
                             });
                         })
                         .catch(err => {
                           console.log('No se pudo ejecutar ==', err)
-                          res.writeHead(400, "SQL ERROR " + ins_sql, { 'Content-Type': 'text/plain' });
+                          res.writeHead(400, "query :" + ins_sql+' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
                           res.send();
                         });
                     })
                     .catch(err => {
                       console.log('No se pudo ejecutar ==', err)
-                      res.writeHead(400, "SQL ERROR " + ins_sql, { 'Content-Type': 'text/plain' });
+                      res.writeHead(400, "query :" + ins_sql+' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
                       res.send();
                     });
                 })
                 .catch(err => {
                   console.log('No se pudo ejecutar ==', err)
-                  res.writeHead(400, "SQL ERROR " + ins_sql, { 'Content-Type': 'text/plain' });
+                  res.writeHead(400, "query :" + ins_sql+' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
                   res.send();
                 })
             })
             .catch(err => {
               console.log('No se pudo ejecutar ==', err)
-              res.writeHead(400, "SQL ERROR " + ins_sql, { 'Content-Type': 'text/plain' });
+              res.writeHead(400, "query :" + ins_sql+' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
               res.send();
             })
         })
         .catch(err => {
           console.log('No se pudo ejecutar ==', err)
-          res.writeHead(400, "SQL ERROR " + ins_sql, { 'Content-Type': 'text/plain' });
+          res.writeHead(400, "query :" + ins_sql+' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
           res.send();
         })
 
@@ -932,26 +932,26 @@ exports.sql = (req, res) => {
       opciones.mapToModel = true
       // se pasa el nombre de la tabla y si es posgres o MSSQL
 
-      ins_sql = `select F_gen_indices(,'${options.dialect}','${nom_tab}') as query`
-      var query = ''
+      ins_sql = `select F_gen_indices('${options.dialect}','${nom_tab}') as query`
+      
       db.sequelize.query(ins_sql, opciones)
         .then(data => {
           console.log('<========= f_gen_indices===>', data)
-          query = data[0][0].query
+          const query = data[0][0].query
           db.sequelize.query(query)
             .then(data => {
               console.log('<=========query GENERA INDICES=======>', data)
-              res.send(data[0]);
+              res.send(query);
             })
             .catch(err => {
               console.log('No se pudo ejecutar ==', err)
-              res.writeHead(400, "SQL ERROR " + ins_sql, { 'Content-Type': 'text/plain' });
+              res.writeHead(400, "query :" + ins_sql+' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
               res.send();
             });
         })
         .catch(err => {
           console.log('No se pudo ejecutar ==', err)
-          res.writeHead(400, "SQL ERROR " + ins_sql, { 'Content-Type': 'text/plain' });
+          res.writeHead(400, "query :" + ins_sql+' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
           res.send();
         });
 
@@ -961,22 +961,21 @@ exports.sql = (req, res) => {
     case 'GENVISTASSQL':
       opciones.mapToModel = true
 
-      // se pasa el nombre de la tabla y si es posgres o MSSQL
-
-      ins_sql = `select F_gen_vistas_sql('${options.dialect}','${nom_tab}',) as query`
-      var resultado = ''
+      // se pasa el dialecto (posgres o MSSQL) y nombre de la tabla y si es 
+      ins_sql = `select F_gen_vista('${options.dialect}','${nom_tab}') as query`
+      
       db.sequelize.query(ins_sql, opciones)
         .then(data => {
           console.log('<========= f_gen_vistas_sql===>', data)
-          resultado = data[0].query;
-          db.sequelize.query(resultado, opciones)
+          const query = data[0][0].query;
+          db.sequelize.query(query, opciones)
             .then(data => {
               console.log('<=========Vistas SQL Generada=======>', data)
-              res.send(data[0]);
+              res.send(data[0][0]);
             })
             .catch(err => {
               console.log('No se pudo ejecutar ==', err)
-              res.writeHead(400, "SQL ERROR " + ins_sql, { 'Content-Type': 'text/plain' });
+              res.writeHead(400, "query :" + ins_sql+' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
               res.send();
             });
         })
@@ -991,20 +990,20 @@ exports.sql = (req, res) => {
     case 'GENMODELO':
       opciones.mapToModel = true
 
-      ins_sql = `select F_gen_modelo('${options.dialect}','${nom_tab}') as query`
-      var resultado = ''
-      db.sequelize.query(ins_sql, opciones)
-        .then(data => {
-          resultado = data[0].query;
-          const resultado = data[0].query
-          const fs = require('fs');
-          const result = fs.writeFileSync(dir_emp + '/models/' + nom_tab + '.js', resultado);
-          console.log('<=========SE GENERO MODEL=======>', result)
-          res.send(data[0].query);
-        })
+      genModel(nom_tab, db, dir_emp)
+        .then((data) => {
+
+          if (data == 'Ok') {
+            res.send('Se genero tabla ' + nom_tab);
+          }
+          else {
+            res.writeHead(400, "SQL ERROR " + res, { 'Content-Type': 'text/plain' });
+            res.send();
+          }
+        }) //  Fin promesa
         .catch(err => {
-          console.log('No se pudo ejecutar ==', err)
-          res.writeHead(400, "SQL ERROR " + ins_sql, { 'Content-Type': 'text/plain' });
+          console.log('No se pudo generar MODEL ', err)
+          res.writeHead(400, "NODE ERROR :" + err, { 'Content-Type': 'text/plain' });
           res.send();
         });
 
@@ -1018,9 +1017,47 @@ exports.sql = (req, res) => {
 
 };
 
-/////////////////////////////////////////////////////////////////
-//////  Funciones ///////////////////////////////////////
+//////////////////////////////////////////////////////
+/////////////////  Funciones /////////////////////////
+//////////////////////////////////////////////////////
 
+
+///////////////////////////////////////////
+// Genera Model para sequelize 
+//////////////////////////////////////////
+
+async function genModel(nom_tab, db, dir_emp) {
+  try {
+    ins_sql = `select F_gen_modelo(nom_ind) as query,nom_ind from comeind where lower(nom_tab)=lower('${nom_tab}') and num_ind=1 `
+    db.sequelize.query(ins_sql)
+      .then(data => {
+        if (!data[0][0] || data[0][0].query == null) { // No hay modelo a generar
+          return
+        }
+        query = data[0][0].query
+        const nom_ind = data[0][0].nom_ind
+        const modelo = dir_emp + 'files/' + nom_ind + '.js'
+        console.log('<=========Escribe Sequelize MODEL  Node Server=======>', modelo)
+        //const fs = require('fs')
+
+        fs.writeFile(modelo, query, (err) => {
+          if (err) {
+            console.log('<=========Error escribiento MODEL >', modelo, err)
+            return "NODE ERROR. Can't write Sequelize MODEL " + modelo + " " + err
+          }
+        });
+
+        return 'Ok'
+      })
+      .catch(err => {
+        console.log('ERROR :', err)
+        return 'error' + ins_sql
+      });
+  } catch (error) {
+    console.error(`NODE ERROR. Can't write Sequelize MODEL: ${error}`);
+    return 'error' + error
+  }
+}
 function base64(source) {
   // Encode in classical base64
 

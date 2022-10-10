@@ -1,5 +1,9 @@
+# Desarrolllo
 nodemon server_nue.js   Automaticamente recompila
 nodemon server_nue.js   Corre en Node server 
 
 
 nodemon server_nue.js 22/Oct/2021
+
+# Produccion
+node server_nue.js
