@@ -885,43 +885,43 @@ exports.sql = (req, res) => {
 
                                 .catch(err => {
                                   console.log('No se pudo ejecutar ==', err)
-                                  res.writeHead(400, "query :" + ins_sql+' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
+                                  res.writeHead(400, "query :" + ins_sql + ' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
                                   res.send();
                                 });
                             })
                             .catch(err => {
                               console.log('No se pudo ejecutar ==', err)
-                              res.writeHead(400, "query :" + ins_sql+' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
+                              res.writeHead(400, "query :" + ins_sql + ' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
                               res.send();
                             });
                         })
                         .catch(err => {
                           console.log('No se pudo ejecutar ==', err)
-                          res.writeHead(400, "query :" + ins_sql+' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
+                          res.writeHead(400, "query :" + ins_sql + ' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
                           res.send();
                         });
                     })
                     .catch(err => {
                       console.log('No se pudo ejecutar ==', err)
-                      res.writeHead(400, "query :" + ins_sql+' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
+                      res.writeHead(400, "query :" + ins_sql + ' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
                       res.send();
                     });
                 })
                 .catch(err => {
                   console.log('No se pudo ejecutar ==', err)
-                  res.writeHead(400, "query :" + ins_sql+' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
+                  res.writeHead(400, "query :" + ins_sql + ' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
                   res.send();
                 })
             })
             .catch(err => {
               console.log('No se pudo ejecutar ==', err)
-              res.writeHead(400, "query :" + ins_sql+' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
+              res.writeHead(400, "query :" + ins_sql + ' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
               res.send();
             })
         })
         .catch(err => {
           console.log('No se pudo ejecutar ==', err)
-          res.writeHead(400, "query :" + ins_sql+' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
+          res.writeHead(400, "query :" + ins_sql + ' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
           res.send();
         })
 
@@ -933,7 +933,7 @@ exports.sql = (req, res) => {
       // se pasa el nombre de la tabla y si es posgres o MSSQL
 
       ins_sql = `select F_gen_indices('${options.dialect}','${nom_tab}') as query`
-      
+
       db.sequelize.query(ins_sql, opciones)
         .then(data => {
           console.log('<========= f_gen_indices===>', data)
@@ -945,39 +945,45 @@ exports.sql = (req, res) => {
             })
             .catch(err => {
               console.log('No se pudo ejecutar ==', err)
-              res.writeHead(400, "query :" + ins_sql+' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
+              res.writeHead(400, "query :" + ins_sql + ' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
               res.send();
             });
         })
         .catch(err => {
           console.log('No se pudo ejecutar ==', err)
-          res.writeHead(400, "query :" + ins_sql+' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
+          res.writeHead(400, "query :" + ins_sql + ' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
           res.send();
         });
 
       break;
 
-
     case 'GENVISTASSQL':
       opciones.mapToModel = true
-
       // se pasa el dialecto (posgres o MSSQL) y nombre de la tabla y si es 
-      ins_sql = `select F_gen_vista('${options.dialect}','${nom_tab}') as query`
-      
+      if (options.dialect='postgres')
+         ins_sql = `select P_gen_vista('${options.dialect}','${nom_tab}') as query`
+      else
+         ins_sql = `exec  P_gen_vista '${options.dialect}','${nom_tab}' `
+
       db.sequelize.query(ins_sql, opciones)
         .then(data => {
-          console.log('<========= f_gen_vistas_sql===>', data)
-          const query = data[0][0].query;
-          db.sequelize.query(query, opciones)
-            .then(data => {
-              console.log('<=========Vistas SQL Generada=======>', data)
-              res.send(data[0][0]);
-            })
-            .catch(err => {
-              console.log('No se pudo ejecutar ==', err)
-              res.writeHead(400, "query :" + ins_sql+' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
-              res.send();
-            });
+          console.log('<========= P_gen_vistas_sql  ===>',data[0].length, data[0],data[0].length)
+          for (let ren = 0; ren < data[0].length; ren++) { // genera tantas vistas como sea posible
+            const query = data[0][ren].query;
+
+            console.log('<========= P_gen_vistas_sql query===>',query)
+
+            db.sequelize.query(query, opciones)
+              .then(data => {
+                console.log('<=========Vistas SQL Generada=======>', query)
+              })
+              .catch(err => {
+                console.log('No se pudo ejecutar ==', err)
+                res.writeHead(400, "query :" + ins_sql + ' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
+                res.send();
+              });
+          }
+
         })
         .catch(err => {
           console.log('No se pudo ejecutar ==', err)
