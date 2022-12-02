@@ -217,12 +217,12 @@ exports.sql = (req, res) => {
     plain: false,
   }
   //const condicion = { where: {} }
-
-  condicion.where = req.body.where; // Condicion Where de busqueda
+  //console.log('condicion.where =',req.body.where)
+  condicion.where =req.body.where
+  //eval('condicion.where ='+req.body.where); // Condicion Where de busqueda
   let nom_vis = ''
   let nom_tab = ''
 
-  console.log('req ======>>>>>>>', req.body)
   if (req.body.nom_vis && req.body.nom_vis != null)
     nom_vis = req.body.nom_vis
   if (req.body.nom_tab && req.body.nom_tab != null)
@@ -245,7 +245,7 @@ exports.sql = (req, res) => {
   //let nom_tab = 'man_come' + nom_vis.substr(-3, 3); // Nombre de la tabla de mantenimiento
 
 
-  console.log('Tabla a utilizar ======>>>>>>>', nom_tab)
+  console.log('req ======>>>>>>>', req.body,condicion)
 
   const orden = { order: {} }
   let ins_sql = ''
@@ -419,6 +419,8 @@ exports.sql = (req, res) => {
             view.old[0][nom_campo] = null;
 
           } // Fin del for
+
+
           if (!sw_timestamp) { // No hay campo timestamp (se supone postgres)
             const est_campo = {
               des_cam: 'timestamp',  // Nombre delcampo
@@ -436,36 +438,78 @@ exports.sql = (req, res) => {
           let con_ind = ''
           let nom_cam = ''
           let pos = exp_ind.indexOf(',')
-
+          console.log('Exp Indice ===>',exp_ind,pos)  
           // console.log(' Use nodata Vista 1 model======>',data[0][0])
+          let comillas=''
+          
+          if (pos<=0) // si solo lo compone una variable
+            pos=exp_ind.length
 
-          while (pos > 0) {   // Recorremos todas las variables del indice
-            nom_cam = exp_ind.slice(0, pos);
-            if (view.tip_obj == 'MODEL')
-              con_ind = con_ind + nom_cam + ' :  ${m.' + nom_cam + '},'
-            //              con_ind = con_ind + nom_cam + ' : m.' + nom_cam + ',';
-            if (view.tip_obj == 'VIEW')
-              con_ind = con_ind + exp_ind + "=' ${m." + exp_ind + "}' and "
+          nom_cam = exp_ind.slice(0, pos);
 
+          while (nom_cam.length>0 ) {   // Recorremos todas las variables del indice
+           // comillas="${"+"'"+"}"
+           comillas="'"
+
+           console.log('Indice campo===>',nom_cam,data[0]) 
+             // busca el campo en la definicion para ver su tipo de valor 
+            for (var i = 0; i < data[0].length; i++) {
+              //console.log('Busca campo===>',nom_cam,data[0][i].cam_dat.toLowerCase()) 
+
+
+              if (nom_cam.trim().toLocaleLowerCase() == data[0][i].cam_dat.trim().toLowerCase()){ 
+                console.log('Encontre campo===>',nom_cam,data[0][i].tip_dat.toLowerCase().substring(0, 3)) 
+                const tip_dat=data[0][i].tip_dat.toLowerCase().substring(0, 3)
+                if (  tip_dat=='big' ||
+                      tip_dat=='int' ||
+                      tip_dat=='big' ||
+                      tip_dat=='sma' ||
+                      tip_dat=='num' ||
+                      tip_dat=='bol') comillas=''
+                i=data[0].length
+              }
+            }  
+
+            if (view.tip_obj == 'MODEL'){
+               //  con_ind = con_ind + nom_cam + ' : '+comillas+'${m.' + nom_cam + '}'+comillas+','
+               con_ind = con_ind + nom_cam + ' : m.' + nom_cam + ',';
+             }
+            if (view.tip_obj == 'VIEW'){
+              if (con_ind.length>0)
+                 con_ind=con_ind+' and '
+              con_ind = con_ind + exp_ind + '='+comillas+'${m.' + exp_ind + '}'+comillas
+            }
+            
             exp_ind = exp_ind.substring(pos + 1);
             pos = exp_ind.indexOf(',')
+
+
+            if (pos<=0) // si solo lo compone una variable
+              pos=exp_ind.length
+
+            if (pos>0)  
+              nom_cam = exp_ind.slice(0, pos);
+            else
+              nom_cam=''
+
 
             //   console.log(' Use nodata Vista 1 ======>exp_ind=',exp_ind,'con_ind='+ con_ind,'nom_cam='+nom_cam)
 
           }
-          if (exp_ind.length > 0) {
+          
+          if (con_ind.length > 0) {
             if (view.tip_obj == 'MODEL')
-              con_ind = '`{' + con_ind + exp_ind + ': ${m.' + exp_ind + '}}`'
+              con_ind = '{' + con_ind+  '}'
             //  con_ind = ' { ' + con_ind + exp_ind + ': m.' + exp_ind + '}'
             if (view.tip_obj == 'VIEW')
-              con_ind = "`" + con_ind + exp_ind + "= '${m." + exp_ind + "}'" + "`"
+              con_ind = "`" + con_ind + "`"
           }
-
+           
           view.exp_indice = con_ind // Indice a utilizar
 
           //console.log(' Use nodata Vista ======>',nom_vis,data[0][0].fil_vis.trim().toLowerCase(),'Cond Indice==>'+ con_ind)
           //console.log('===================================================================== ')
-          console.log('USENODATA ===>', view)
+          console.log('USENODATA con_ind ===>',con_ind)
 
 
           res.send(view); // enviamos la vista
@@ -1042,7 +1086,7 @@ async function genModel(nom_tab, db, dir_emp) {
         }
         query = data[0][0].query
         const nom_ind = data[0][0].nom_ind
-        const modelo = dir_emp + 'files/' + nom_ind + '.js'
+        const modelo = dir_emp + 'files/' + nom_ind.toLowerCase + '.js'
         console.log('<=========Escribe Sequelize MODEL  Node Server=======>', modelo)
         //const fs = require('fs')
 
