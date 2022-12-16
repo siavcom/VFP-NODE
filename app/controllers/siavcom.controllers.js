@@ -290,10 +290,10 @@ exports.sql = (req, res) => {
       db.sequelize.query(ins_sql) // lee el diccionaro de datos
         .then(data => {
           //console.log('============== Definicion Schema>>>>', data);
-          // console.log('=====Data length=======',data.length)
+        // console.log('=====USENODATA data=======',data)
 
-          if (!data.length || data.length == 0) {  //  No hay tabla
-            res.writeHead(400, 'No existe la tabla===> ' + nom_vis, { 'Content-Type': 'text/plain' });
+          if (!data.length || !data[0][0].tip_obj) {  //  No hay tabla
+            res.writeHead(400, 'No existe sqlView ===> ' + nom_vis, { 'Content-Type': 'text/plain' });
             res.send();
             return false;
           }
@@ -331,7 +331,7 @@ exports.sql = (req, res) => {
 
             nom_campo = data[0][i].cam_dat.trim().toLowerCase(); // pasamos a minusculas
             tip_campo = data[0][i].tip_dat.toLowerCase().substring(0, 3);
-            val_defa = data[0][i].val_dat.trim()
+            val_defa = data[0][i].val_dat ? data[0][i].val_dat.trim(): ''
             // val_defa = data[0][i].vvu_dat.trim();  // valor vue
 
             if (nom_campo == 'timestamp') {
@@ -433,12 +433,14 @@ exports.sql = (req, res) => {
 
           //   console.log('view.est_tabla Tabla===>',view.est_tabla)
           //console.log('Data===>',data[0][0])
-          let exp_ind = data[0][0].fil_vis.trim().toLowerCase();
+          let exp_ind=''
+          if (data[0][0].fil_vis!=null)
+            exp_ind = data[0][0].fil_vis.trim().toLowerCase();
 
           let con_ind = ''
           let nom_cam = ''
           let pos = exp_ind.indexOf(',')
-          console.log('Exp Indice ===>',exp_ind,pos)  
+          //console.log('Exp Indice ===>',exp_ind,pos)  
           // console.log(' Use nodata Vista 1 model======>',data[0][0])
           let comillas=''
           
@@ -451,14 +453,14 @@ exports.sql = (req, res) => {
            // comillas="${"+"'"+"}"
            comillas="'"
 
-           console.log('Indice campo===>',nom_cam,data[0]) 
+           //console.log('Indice campo===>',nom_cam,data[0]) 
              // busca el campo en la definicion para ver su tipo de valor 
             for (var i = 0; i < data[0].length; i++) {
               //console.log('Busca campo===>',nom_cam,data[0][i].cam_dat.toLowerCase()) 
 
 
               if (nom_cam.trim().toLocaleLowerCase() == data[0][i].cam_dat.trim().toLowerCase()){ 
-                console.log('Encontre campo===>',nom_cam,data[0][i].tip_dat.toLowerCase().substring(0, 3)) 
+               // console.log('Encontre campo===>',nom_cam,data[0][i].tip_dat.toLowerCase().substring(0, 3)) 
                 const tip_dat=data[0][i].tip_dat.toLowerCase().substring(0, 3)
                 if (  tip_dat=='big' ||
                       tip_dat=='int' ||
@@ -509,7 +511,7 @@ exports.sql = (req, res) => {
 
           //console.log(' Use nodata Vista ======>',nom_vis,data[0][0].fil_vis.trim().toLowerCase(),'Cond Indice==>'+ con_ind)
           //console.log('===================================================================== ')
-          console.log('USENODATA con_ind ===>',con_ind)
+         // console.log('USENODATA con_ind ===>',con_ind)
 
 
           res.send(view); // enviamos la vista
@@ -871,11 +873,10 @@ exports.sql = (req, res) => {
 
       ins_sql = `select F_gen_tabla('${options.dialect}','${nom_tab}') as query`
       var query = ''
-      db.sequelize.query(ins_sql)
+      db.sequelize.query(ins_sql) // genera query
         .then(data => {
-          query = data[0][0].query
-
-          db.sequelize.query(query)
+          query = data[0][0].query 
+          db.sequelize.query(query) // ejecuto query
             .then(data => {
               console.log('<=========TABLA GENERADA =======>', data)
               ins_sql = `select F_gen_vista_man('${options.dialect}','${nom_tab}') as query `
@@ -1039,7 +1040,7 @@ exports.sql = (req, res) => {
 
     case 'GENMODELO':
       opciones.mapToModel = true
-
+     
       genModel(nom_tab, db, dir_emp)
         .then((data) => {
 
@@ -1077,16 +1078,18 @@ exports.sql = (req, res) => {
 //////////////////////////////////////////
 
 async function genModel(nom_tab, db, dir_emp) {
+
+  console.log('GENERA MODELO ') 
   try {
     ins_sql = `select F_gen_modelo(nom_ind) as query,nom_ind from comeind where lower(nom_tab)=lower('${nom_tab}') and num_ind=1 `
     db.sequelize.query(ins_sql)
       .then(data => {
-        if (!data[0][0] || data[0][0].query == null) { // No hay modelo a generar
+        if (!data[0][0] || data[0][0].query.trim() == '') { // No hay modelo a generar
           return
         }
         query = data[0][0].query
         const nom_ind = data[0][0].nom_ind
-        const modelo = dir_emp + 'files/' + nom_ind.toLowerCase + '.js'
+        const modelo = dir_emp + 'files/' + nom_ind.toLowerCase() + '.js'
         console.log('<=========Escribe Sequelize MODEL  Node Server=======>', modelo)
         //const fs = require('fs')
 
