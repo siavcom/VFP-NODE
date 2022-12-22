@@ -561,15 +561,15 @@ exports.sql = (req, res) => {
       db.sequelize.transaction({ autocommit: false })
         .then(transaction => {
           db[nom_tab].create(datos, {
-            returning: true,
-            plain: true,
+            returning: false,
+            plain: false,
             transaction: transaction,
             validate: true
           })
             .then((result) => {
               // Obtiene el timestamp y key_pri actual
               transaction.commit();
-              condicion.atributes = ['key_pri', 'timestamp']
+
               console.log('================ datos insertados  condicion >>>>>', result, condicion)
               db[nom_tab].findAll(
 
@@ -639,23 +639,26 @@ exports.sql = (req, res) => {
 
           db[nom_tab].update(datos, {
             where: { key_pri: key_pri },
-            returning: true,
-            plain: true,
+            returning: false,
+            plain: false,
             transaction: transaction
           })
 
 
             // db[nom_vis].upsert(dat_act, condicion)
             .then((result) => {
+              console.log('update respuesta  =====>>>', result)
               transaction.commit()
               // Obtiene el timestamp actual
-              db[nom_tab].findAll({  // busca el timestamp 
-                attributes: ['timestamp'],
-                where: { key_pri: key_pri }
-              })
-                .then(resultado => {  // envia el timestamp
-                  console.log('==========Dato actualizado timestamp=======>>>>', resultado) // aqui voy , checar el resultado
-                  res.send(resultado);
+              db[nom_tab].findAll(
+                {
+                  attributes: ['timestamp','key_pri'],
+                  where: { key_pri: key_pri },
+                  raw: true,
+                })
+                .then(datos => {  // envia el timestamp aqui voy checar demas findall
+                  console.log('==========Dato actualizado datos=======>>>>', datos[0].timestamp) 
+                  res.send(datos[0]);
 
                 })
                 .catch(err => {     // Error al leer el TimeStamp
@@ -870,6 +873,7 @@ exports.sql = (req, res) => {
 
       // se pasa el nombre de la tabla y si es posgres o MSSQL
       ins_sql = `select P_gen_todo('${options.dialect}','${nom_tab}') as query`
+      console.log('<========= P_gen_todo ===>', ins_sql)
 
       db.sequelize.query(ins_sql) // genera query
         .then(data => {
