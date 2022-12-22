@@ -13,6 +13,8 @@ module.exports = function(sequelize, DataTypes) {
 'not_dir': {type: DataTypes.STRING(512),allowNull: false,comment: 'NOTA DE LA DIRECCION' },
 'usu_usu': {type: DataTypes.SMALLINT,allowNull: true,defaultValue: '0',comment: 'USUARIO' },
 'tie_uac': {type: DataTypes.DATE,allowNull: true,comment: 'FECHA ULTIMA ACTUALIZACION' },
+'usu_cre': {type: DataTypes.SMALLINT,allowNull: false,defaultValue: '0',comment: 'USUARIO' },
+'tie_cre': {type: DataTypes.DATE,allowNull: true,comment: 'FECHA ULTIMA ACTUALIZACION' },
 'key_pri': {type: DataTypes.INTEGER,allowNull: false,defaultValue: '0',comment: 'LLAVE PRIMARIA PARA LA ACTUALIZACION DE VISTAS', primaryKey: true },
 'timestamp': {type: DataTypes.INTEGER,allowNull: true,defaultValue: '0',comment: 'TIMESTAMP' },
 createdAt: {field: 'tie_cre',type: DataTypes.DATE,},

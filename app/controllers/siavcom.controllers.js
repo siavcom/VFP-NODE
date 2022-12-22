@@ -218,7 +218,7 @@ exports.sql = (req, res) => {
   }
   //const condicion = { where: {} }
   //console.log('condicion.where =',req.body.where)
-  condicion.where =req.body.where
+  condicion.where = req.body.where
   //eval('condicion.where ='+req.body.where); // Condicion Where de busqueda
   let nom_vis = ''
   let nom_tab = ''
@@ -245,8 +245,8 @@ exports.sql = (req, res) => {
   //let nom_tab = 'man_come' + nom_vis.substr(-3, 3); // Nombre de la tabla de mantenimiento
 
 
-  console.log('req ======>>>>>>>', req.body,condicion)
-
+  console.log('req ======>>>>>>>', req.body, condicion)
+  // aqui me quede , no hay condicion 
   const orden = { order: {} }
   let ins_sql = ''
   if (req.body.order) orden.order = req.body.order; // Orden de la consulta
@@ -290,7 +290,7 @@ exports.sql = (req, res) => {
       db.sequelize.query(ins_sql) // lee el diccionaro de datos
         .then(data => {
           //console.log('============== Definicion Schema>>>>', data);
-        // console.log('=====USENODATA data=======',data)
+          // console.log('=====USENODATA data=======',data)
 
           if (!data.length || !data[0][0].tip_obj) {  //  No hay tabla
             res.writeHead(400, 'No existe sqlView ===> ' + nom_vis, { 'Content-Type': 'text/plain' });
@@ -331,7 +331,7 @@ exports.sql = (req, res) => {
 
             nom_campo = data[0][i].cam_dat.trim().toLowerCase(); // pasamos a minusculas
             tip_campo = data[0][i].tip_dat.toLowerCase().substring(0, 3);
-            val_defa = data[0][i].val_dat ? data[0][i].val_dat.trim(): ''
+            val_defa = data[0][i].val_dat ? data[0][i].val_dat.trim() : ''
             // val_defa = data[0][i].vvu_dat.trim();  // valor vue
 
             if (nom_campo == 'timestamp') {
@@ -433,8 +433,8 @@ exports.sql = (req, res) => {
 
           //   console.log('view.est_tabla Tabla===>',view.est_tabla)
           //console.log('Data===>',data[0][0])
-          let exp_ind=''
-          if (data[0][0].fil_vis!=null)
+          let exp_ind = ''
+          if (data[0][0].fil_vis != null)
             exp_ind = data[0][0].fil_vis.trim().toLowerCase();
 
           let con_ind = ''
@@ -442,76 +442,76 @@ exports.sql = (req, res) => {
           let pos = exp_ind.indexOf(',')
           //console.log('Exp Indice ===>',exp_ind,pos)  
           // console.log(' Use nodata Vista 1 model======>',data[0][0])
-          let comillas=''
-          
-          if (pos<=0) // si solo lo compone una variable
-            pos=exp_ind.length
+          let comillas = ''
+
+          if (pos <= 0) // si solo lo compone una variable
+            pos = exp_ind.length
 
           nom_cam = exp_ind.slice(0, pos);
 
-          while (nom_cam.length>0 ) {   // Recorremos todas las variables del indice
-           // comillas="${"+"'"+"}"
-           comillas="'"
+          while (nom_cam.length > 0) {   // Recorremos todas las variables del indice
+            // comillas="${"+"'"+"}"
+            comillas = "'"
 
-           //console.log('Indice campo===>',nom_cam,data[0]) 
-             // busca el campo en la definicion para ver su tipo de valor 
+            //console.log('Indice campo===>',nom_cam,data[0]) 
+            // busca el campo en la definicion para ver su tipo de valor 
             for (var i = 0; i < data[0].length; i++) {
               //console.log('Busca campo===>',nom_cam,data[0][i].cam_dat.toLowerCase()) 
 
 
-              if (nom_cam.trim().toLocaleLowerCase() == data[0][i].cam_dat.trim().toLowerCase()){ 
-               // console.log('Encontre campo===>',nom_cam,data[0][i].tip_dat.toLowerCase().substring(0, 3)) 
-                const tip_dat=data[0][i].tip_dat.toLowerCase().substring(0, 3)
-                if (  tip_dat=='big' ||
-                      tip_dat=='int' ||
-                      tip_dat=='big' ||
-                      tip_dat=='sma' ||
-                      tip_dat=='num' ||
-                      tip_dat=='bol') comillas=''
-                i=data[0].length
+              if (nom_cam.trim().toLocaleLowerCase() == data[0][i].cam_dat.trim().toLowerCase()) {
+                // console.log('Encontre campo===>',nom_cam,data[0][i].tip_dat.toLowerCase().substring(0, 3)) 
+                const tip_dat = data[0][i].tip_dat.toLowerCase().substring(0, 3)
+                if (tip_dat == 'big' ||
+                  tip_dat == 'int' ||
+                  tip_dat == 'big' ||
+                  tip_dat == 'sma' ||
+                  tip_dat == 'num' ||
+                  tip_dat == 'bol') comillas = ''
+                i = data[0].length
               }
-            }  
-
-            if (view.tip_obj == 'MODEL'){
-               //  con_ind = con_ind + nom_cam + ' : '+comillas+'${m.' + nom_cam + '}'+comillas+','
-               con_ind = con_ind + nom_cam + ' : m.' + nom_cam + ',';
-             }
-            if (view.tip_obj == 'VIEW'){
-              if (con_ind.length>0)
-                 con_ind=con_ind+' and '
-              con_ind = con_ind + exp_ind + '='+comillas+'${m.' + exp_ind + '}'+comillas
             }
-            
+
+            if (view.tip_obj == 'MODEL') {
+              //  con_ind = con_ind + nom_cam + ' : '+comillas+'${m.' + nom_cam + '}'+comillas+','
+              con_ind = con_ind + nom_cam + ' : m.' + nom_cam + ',';
+            }
+            if (view.tip_obj == 'VIEW') {
+              if (con_ind.length > 0)
+                con_ind = con_ind + ' and '
+              con_ind = con_ind + exp_ind + '=' + comillas + '${m.' + exp_ind + '}' + comillas
+            }
+
             exp_ind = exp_ind.substring(pos + 1);
             pos = exp_ind.indexOf(',')
 
 
-            if (pos<=0) // si solo lo compone una variable
-              pos=exp_ind.length
+            if (pos <= 0) // si solo lo compone una variable
+              pos = exp_ind.length
 
-            if (pos>0)  
+            if (pos > 0)
               nom_cam = exp_ind.slice(0, pos);
             else
-              nom_cam=''
+              nom_cam = ''
 
 
             //   console.log(' Use nodata Vista 1 ======>exp_ind=',exp_ind,'con_ind='+ con_ind,'nom_cam='+nom_cam)
 
           }
-          
+
           if (con_ind.length > 0) {
             if (view.tip_obj == 'MODEL')
-              con_ind = '{' + con_ind+  '}'
+              con_ind = '{' + con_ind + '}'
             //  con_ind = ' { ' + con_ind + exp_ind + ': m.' + exp_ind + '}'
             if (view.tip_obj == 'VIEW')
               con_ind = "`" + con_ind + "`"
           }
-           
+
           view.exp_indice = con_ind // Indice a utilizar
 
           //console.log(' Use nodata Vista ======>',nom_vis,data[0][0].fil_vis.trim().toLowerCase(),'Cond Indice==>'+ con_ind)
           //console.log('===================================================================== ')
-         // console.log('USENODATA con_ind ===>',con_ind)
+          // console.log('USENODATA con_ind ===>',con_ind)
 
 
           res.send(view); // enviamos la vista
@@ -632,11 +632,10 @@ exports.sql = (req, res) => {
       // aqui voy
       delete datos['key_pri']   // borramos el key pri de los datos a actualizar
       delete datos['val_vista'];
-      console.log('========== Objeto datos a actualizar =======>', datos);
 
       db.sequelize.transaction({ autocommit: false })
         .then(transaction => {
-          console.log('========== Comienza transaction =======', nom_tab);
+          console.log('========== Begin trans datos a actualizar =======', nom_tab, key_pri, datos);
 
           db[nom_tab].update(datos, {
             where: { key_pri: key_pri },
@@ -654,9 +653,9 @@ exports.sql = (req, res) => {
                 attributes: ['timestamp'],
                 where: { key_pri: key_pri }
               })
-                .then(timestamp => {  // envia el timestamp
-                  console.log('==========Dato actualizado timestamp=======>>>>', timestamp) // aqui voy , checar el resultado
-                  res.send(timestamp);
+                .then(resultado => {  // envia el timestamp
+                  console.log('==========Dato actualizado timestamp=======>>>>', resultado) // aqui voy , checar el resultado
+                  res.send(resultado);
 
                 })
                 .catch(err => {     // Error al leer el TimeStamp
@@ -870,108 +869,146 @@ exports.sql = (req, res) => {
       opciones.mapToModel = true
 
       // se pasa el nombre de la tabla y si es posgres o MSSQL
+      ins_sql = `select P_gen_todo('${options.dialect}','${nom_tab}') as query`
 
-      ins_sql = `select F_gen_tabla('${options.dialect}','${nom_tab}') as query`
-      var query = ''
       db.sequelize.query(ins_sql) // genera query
         .then(data => {
-          query = data[0][0].query 
-          db.sequelize.query(query) // ejecuto query
-            .then(data => {
-              console.log('<=========TABLA GENERADA =======>', data)
-              ins_sql = `select F_gen_vista_man('${options.dialect}','${nom_tab}') as query `
-              db.sequelize.query(ins_sql)
-                .then(data => {
-                  query = data[0][0].query
-                  db.sequelize.query(query)
-                    .then(data => {
-                      console.log('<=========VISTA DE MTO GENERADA =======>', data)
-                      ins_sql = `select F_gen_trigger_fun('${options.dialect}','${nom_tab}') as query`
-                      db.sequelize.query(ins_sql)
-                        .then(data => {
-                          console.log('<========= SCRIPT FUNCION DE MTO GENERADA =======>', data)
-                          query = data[0][0].query
-                          db.sequelize.query(query)
-                            .then(data => {
-                              console.log('<========= FUNCION DE MTO GENERADA =======>', data)
-                              ins_sql = `select F_gen_trigger_man('${options.dialect}','${nom_tab}') as query`
-                              db.sequelize.query(ins_sql)
-                                .then(data => {
-                                  console.log('<========= SCRIPT trigger DE MTO GENERADA =======>', data)
-                                  query = data[0][0].query
-                                  db.sequelize.query(query)
-                                    .then(async data => {
-                                      let result = ''
-                                      console.log('<=========TRIGGER GENERADO =======>', data)
 
-                                      //const promesa = genModel(nom_tab, db, dir_emp)
+          for (let ren = 0; ren < data[0].length; ren++) { // genera tantas vistas como sea posible
+            const query = data[0][ren].query;
 
-                                      genModel(nom_tab, db, dir_emp)
-                                        .then((data) => {
+            console.log('<========= Ejecuta  query===>', query)
 
-                                          if (data == 'Ok') {
-                                            res.send('Se genero tabla ' + nom_tab);
-                                          }
-                                          else {
-                                            res.writeHead(400, "SQL ERROR " + res, { 'Content-Type': 'text/plain' });
-                                            res.send();
-                                          }
-                                        }) //  Fin promesa
-                                        .catch(err => {
-                                          console.log('No se pudo generar MODEL ', err)
-                                          res.writeHead(400, "NODE ERROR :" + err, { 'Content-Type': 'text/plain' });
-                                          res.send();
-                                        });
+            db.sequelize.query(query)
+              .then(data => {
+                console.log('<=========Query ejecutado =======>', query)
+              })
+              .catch(err => {
+                console.log('No se pudo ejecutar query ==', err)
+                res.writeHead(400, "query :" + query + ' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
+                res.send()
+                return
+              })
 
-
-
-                                    }) // trigger generado
-                                }) // trigger de mto generado
-
-                                .catch(err => {
-                                  console.log('No se pudo ejecutar ==', err)
-                                  res.writeHead(400, "query :" + ins_sql + ' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
-                                  res.send();
-                                });
-                            })
-                            .catch(err => {
-                              console.log('No se pudo ejecutar ==', err)
-                              res.writeHead(400, "query :" + ins_sql + ' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
-                              res.send();
-                            });
-                        })
-                        .catch(err => {
-                          console.log('No se pudo ejecutar ==', err)
-                          res.writeHead(400, "query :" + ins_sql + ' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
-                          res.send();
-                        });
-                    })
-                    .catch(err => {
-                      console.log('No se pudo ejecutar ==', err)
-                      res.writeHead(400, "query :" + ins_sql + ' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
-                      res.send();
-                    });
-                })
-                .catch(err => {
-                  console.log('No se pudo ejecutar ==', err)
-                  res.writeHead(400, "query :" + ins_sql + ' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
-                  res.send();
-                })
-            })
-            .catch(err => {
-              console.log('No se pudo ejecutar ==', err)
-              res.writeHead(400, "query :" + ins_sql + ' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
-              res.send();
-            })
-        })
-        .catch(err => {
+          }
+        }).
+        catch(err => {
           console.log('No se pudo ejecutar ==', err)
           res.writeHead(400, "query :" + ins_sql + ' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
           res.send();
+          return
         })
 
-      break;
+      break
 
+
+    /*
+    ins_sql = `select F_gen_tabla('${options.dialect}','${nom_tab}') as query`
+    var query = ''
+    db.sequelize.query(ins_sql) // genera query
+      .then(data => {
+        query = data[0][0].query 
+        console.log('=================================================')
+        console.log('genera query======> ',query)
+
+        console.log('=================================================')
+
+        db.sequelize.query(query) // ejecuto query
+          .then(data => {
+            console.log('<=========TABLA GENERADA =======>', data)
+            ins_sql = `select F_gen_vista_man('${options.dialect}','${nom_tab}') as query `
+            db.sequelize.query(ins_sql)
+              .then(data => {
+                query = data[0][0].query
+                db.sequelize.query(query)
+                  .then(data => {
+                    console.log('<=========VISTA DE MTO GENERADA =======>', data)
+                    ins_sql = `select F_gen_trigger_fun('${options.dialect}','${nom_tab}') as query`
+                    db.sequelize.query(ins_sql)
+                      .then(data => {
+                        console.log('<========= SCRIPT FUNCION DE MTO GENERADA =======>', data)
+                        query = data[0][0].query
+                        db.sequelize.query(query)
+                          .then(data => {
+                            console.log('<========= FUNCION DE MTO GENERADA =======>', data)
+                            ins_sql = `select F_gen_trigger_man('${options.dialect}','${nom_tab}') as query`
+                            db.sequelize.query(ins_sql)
+                              .then(data => {
+                                console.log('<========= SCRIPT trigger DE MTO GENERADA =======>', data)
+                                query = data[0][0].query
+                                db.sequelize.query(query)
+                                  .then(async data => {
+                                    let result = ''
+                                    console.log('<=========TRIGGER GENERADO =======>', data)
+
+                                    //const promesa = genModel(nom_tab, db, dir_emp)
+
+                                    genModel(nom_tab, db, dir_emp)
+                                      .then((data) => {
+
+                                        if (data == 'Ok') {
+                                          res.send('Se genero tabla ' + nom_tab);
+                                        }
+                                        else {
+                                          res.writeHead(400, "SQL ERROR " + res, { 'Content-Type': 'text/plain' });
+                                          res.send();
+                                        }
+                                      }) //  Fin promesa
+                                      .catch(err => {
+                                        console.log('No se pudo generar MODEL ', err)
+                                        res.writeHead(400, "NODE ERROR :" + err, { 'Content-Type': 'text/plain' });
+                                        res.send();
+                                      });
+
+
+
+                                  }) // trigger generado
+                              }) // trigger de mto generado
+
+                              .catch(err => {
+                                console.log('No se pudo ejecutar ==', err)
+                                res.writeHead(400, "query :" + ins_sql + ' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
+                                res.send();
+                              });
+                          })
+                          .catch(err => {
+                            console.log('No se pudo ejecutar ==', err)
+                            res.writeHead(400, "query :" + ins_sql + ' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
+                            res.send();
+                          });
+                      })
+                      .catch(err => {
+                        console.log('No se pudo ejecutar ==', err)
+                        res.writeHead(400, "query :" + ins_sql + ' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
+                        res.send();
+                      });
+                  })
+                  .catch(err => {
+                    console.log('No se pudo ejecutar ==', err)
+                    res.writeHead(400, "query :" + ins_sql + ' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
+                    res.send();
+                  });
+              })
+              .catch(err => {
+                console.log('No se pudo ejecutar ==', err)
+                res.writeHead(400, "query :" + ins_sql + ' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
+                res.send();
+              })
+          })
+          .catch(err => {
+            console.log('No se pudo ejecutar ==', err)
+            res.writeHead(400, "query :" + ins_sql + ' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
+            res.send();
+          })
+      })
+      .catch(err => {
+        console.log('No se pudo ejecutar ==', err)
+        res.writeHead(400, "query :" + ins_sql + ' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
+        res.send();
+      })
+
+    break;
+   */
     case 'GENINDICES':
 
       opciones.mapToModel = true
@@ -1005,18 +1042,18 @@ exports.sql = (req, res) => {
     case 'GENVISTASSQL':
       opciones.mapToModel = true
       // se pasa el dialecto (posgres o MSSQL) y nombre de la tabla y si es 
-      if (options.dialect='postgres')
-         ins_sql = `select P_gen_vista('${options.dialect}','${nom_tab}') as query`
+      if (options.dialect = 'postgres')
+        ins_sql = `select P_gen_vista('${options.dialect}','${nom_tab}') as query`
       else
-         ins_sql = `exec  P_gen_vista '${options.dialect}','${nom_tab}' `
+        ins_sql = `exec  P_gen_vista '${options.dialect}','${nom_tab}' `
 
       db.sequelize.query(ins_sql, opciones)
         .then(data => {
-          console.log('<========= P_gen_vistas_sql  ===>',data[0].length, data[0],data[0].length)
+          console.log('<========= P_gen_vistas_sql  ===>', data[0].length, data[0], data[0].length)
           for (let ren = 0; ren < data[0].length; ren++) { // genera tantas vistas como sea posible
             const query = data[0][ren].query;
 
-            console.log('<========= P_gen_vistas_sql query===>',query)
+            console.log('<========= P_gen_vistas_sql query===>', query)
 
             db.sequelize.query(query, opciones)
               .then(data => {
@@ -1040,7 +1077,7 @@ exports.sql = (req, res) => {
 
     case 'GENMODELO':
       opciones.mapToModel = true
-     
+
       genModel(nom_tab, db, dir_emp)
         .then((data) => {
 
@@ -1079,7 +1116,7 @@ exports.sql = (req, res) => {
 
 async function genModel(nom_tab, db, dir_emp) {
 
-  console.log('GENERA MODELO ') 
+  console.log('GENERA MODELO ')
   try {
     ins_sql = `select F_gen_modelo(nom_ind) as query,nom_ind from comeind where lower(nom_tab)=lower('${nom_tab}') and num_ind=1 `
     db.sequelize.query(ins_sql)
