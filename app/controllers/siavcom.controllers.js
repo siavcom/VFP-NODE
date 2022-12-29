@@ -575,14 +575,15 @@ exports.sql = (req, res) => {
 
                 {
                   attributes: ['timestamp', 'key_pri'],
-                  where: condicion.where
+                  where: condicion.where,
+                  raw: true,
                 })
 
                 // db[nom_tab].findAll(condicion)
                 .then(data => {
-                  console.log('======== datos insertados leidos =======', data);
+                  console.log('======== datos insertados leidos =======', data[0]);
                   // envia el timestamp
-                  res.send(data);
+                  res.send(data[0]);
                 })
                 .catch(err => {     // Error al leer el TimeStamp
                   console.error('Insert commit Error', err)
@@ -656,7 +657,7 @@ exports.sql = (req, res) => {
                   where: { key_pri: key_pri },
                   raw: true,
                 })
-                .then(datos => {  // envia el timestamp aqui voy checar demas findall
+                .then(datos => {  // envia el timestamp     aqui voy checar demas findAll
                   console.log('==========Dato actualizado datos=======>>>>', datos[0].timestamp) 
                   res.send(datos[0]);
 

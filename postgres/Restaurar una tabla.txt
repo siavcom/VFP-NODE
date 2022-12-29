@@ -1,0 +1,3 @@
+sudo su
+su postgres
+pg_restore  --data-only -d "Demo" -t "comeprg" "Demo_5_dic.bak"
