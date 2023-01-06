@@ -653,12 +653,12 @@ exports.sql = (req, res) => {
               // Obtiene el timestamp actual
               db[nom_tab].findAll(
                 {
-                  attributes: ['timestamp','key_pri'],
+                  attributes: ['timestamp', 'key_pri'],
                   where: { key_pri: key_pri },
                   raw: true,
                 })
                 .then(datos => {  // envia el timestamp     aqui voy checar demas findAll
-                  console.log('==========Dato actualizado datos=======>>>>', datos[0].timestamp) 
+                  console.log('==========Dato actualizado datos=======>>>>', datos[0].timestamp)
                   res.send(datos[0]);
 
                 })
@@ -877,24 +877,30 @@ exports.sql = (req, res) => {
       console.log('<========= P_gen_todo ===>', ins_sql)
 
       db.sequelize.query(ins_sql) // genera query
-        .then(data => {
-
+        .then(async data => {
+          let ren = 0
+         
           for (let ren = 0; ren < data[0].length; ren++) { // genera tantas vistas como sea posible
             const query = data[0][ren].query;
-
+            let swEnd=false
+            
             console.log('<========= Ejecuta  query===>', query)
-
-            db.sequelize.query(query)
-              .then(data => {
-                console.log('<=========Query ejecutado =======>', query)
-              })
-              .catch(err => {
-                console.log('No se pudo ejecutar query ==', err)
-                res.writeHead(400, "query :" + query + ' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
-                res.send()
-                return
-              })
-
+            do {
+            
+              await db.sequelize.query(query)
+                .then(data => {
+                  console.log('<=========Query ejecutado =======>', query)
+                  swEnd = true
+                  
+                })
+                .catch(err => {
+                  ren=data[0].length
+                  console.log('No se pudo ejecutar query ==', err)
+                  res.writeHead(400, "query :" + query + ' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
+                  res.send()
+                  return
+                })
+            } while (!swEnd)
           }
         }).
         catch(err => {
