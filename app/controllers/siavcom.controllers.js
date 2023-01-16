@@ -901,7 +901,8 @@ exports.sql = (req, res) => {
                 })
             } while (!swEnd)
           }
-          this.genModel(nom_tab, db, dir_emp)
+          console.log('Genero Todo. Generará modelo===>')
+          await genModel(nom_tab, db, dir_emp)
 
         }).
         catch(err => {
