@@ -14,13 +14,17 @@ module.exports = function(sequelize, DataTypes) {
 'tmo_vis': {type: DataTypes.CHAR(15),allowNull: false,defaultValue: ' ',comment: 'TMOVIS' },
 'vre_vis': {type: DataTypes.CHAR(1),allowNull: false,defaultValue: ' ',comment: 'GENERA VISTA REMOTA DE ACTUALIZACION  EN sqlserver (Solo VFP)' },
 'wjs_vis': {type: DataTypes.STRING(512),allowNull: false,comment: 'Condicion Where para JavaScript ejemplo: con_nom=${m.cod_nom} and left(cop_nom,1)=${m.cop_nom}' },
-'usu_usu': {type: DataTypes.SMALLINT,allowNull: true,defaultValue: '0',comment: 'USUARIO' },
-'usu_cre': {type: DataTypes.SMALLINT,allowNull: false,defaultValue: '0',comment: 'USUARIO CREADOR' },
-'tie_uac': {type: DataTypes.DATE,allowNull: true,comment: 'FECHA ULTIMA ACTUALIZACION' },
-'tie_cre': {type: DataTypes.DATE,allowNull: true,comment: 'TIEMPO DE CREACION' },
-'key_pri': {type: DataTypes.INTEGER,allowNull: false,defaultValue: '0',comment: 'LLAVE PRIMARIA PARA LA ACTUALIZACION DE VISTAS', primaryKey: true },
 'timestamp': {type: DataTypes.INTEGER,allowNull: true,defaultValue: '0',comment: 'TIMESTAMP' },
+'key_pri': {type: DataTypes.INTEGER,allowNull: false,defaultValue: '0',comment: "LLAVE PRIMARIA PARA LA ACTUALIZACION DE VISTAS" , primaryKey: true },
+
+'usu_usu': {field: 'usu_usu',type: DataTypes.SMALLINT },
+'usu_cre': {field: 'usu_cre',type: DataTypes.SMALLINT },
+'tie_uac': {field: 'tie_uac',type: DataTypes.DATE },
+'tie_cre': {field: 'tie_cre',type: DataTypes.DATE },
+
+
+
 createdAt: {field: 'tie_cre',type: DataTypes.DATE,},
 updatedAt: {field: 'tie_uac',type: DataTypes.DATE,} 
-  }, { tableName: 'man_comevis'});
+  }, { tableName: 'man_comedat'});
 };

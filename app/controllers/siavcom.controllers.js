@@ -1,5 +1,3 @@
-
-
 // funcion $(nom_fun) podemos definir una funcion basada en su nombre 
 
 //const { siavcom, Sequelize, queryInterface } = require("../models"); // llama aqui (index.js) que es donde esta la definicion de comenom
@@ -882,6 +880,7 @@ exports.sql = (req, res) => {
          
           for (let ren = 0; ren < data[0].length; ren++) { // genera tantas vistas como sea posible
             const query = data[0][ren].query;
+            
             let swEnd=false
             
             console.log('<========= Ejecuta  query===>', query)
@@ -902,6 +901,8 @@ exports.sql = (req, res) => {
                 })
             } while (!swEnd)
           }
+          this.genModel(nom_tab, db, dir_emp)
+
         }).
         catch(err => {
           console.log('No se pudo ejecutar ==', err)
@@ -1025,16 +1026,19 @@ exports.sql = (req, res) => {
       opciones.mapToModel = true
       // se pasa el nombre de la tabla y si es posgres o MSSQL
 
-      ins_sql = `select F_gen_indices('${options.dialect}','${nom_tab}') as query`
+      ins_sql = `select * F_gen_indices('${options.dialect}','${nom_tab}') `
 
       db.sequelize.query(ins_sql, opciones)
         .then(data => {
           console.log('<========= f_gen_indices===>', data)
           const query = data[0][0].query
+          const modelo = data[0][0].modelo
           db.sequelize.query(query)
             .then(data => {
               console.log('<=========query GENERA INDICES=======>', data)
-              res.send(query);
+           //   this.genModel(nom_tab, db, dir_emp)
+              res.send(query)
+              
             })
             .catch(err => {
               console.log('No se pudo ejecutar ==', err)
