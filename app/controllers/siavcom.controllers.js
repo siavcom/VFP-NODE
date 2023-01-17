@@ -280,14 +280,16 @@ exports.sql = (req, res) => {
 
     case 'USENODATA':
       nom_vis = nom_vis.toLowerCase()
-
-      ins_sql = "select * from vi_schema where nom_vis='" + nom_vis + "' order by con_dat"
+      if (options.dialect='Postgres')
+          ins_sql = "select * from p_schema('" + nom_vis + "')"
+        else
+          ins_sql = "exec p_schema '" + nom_vis + "'"
 
       // buscar en la tabla de indices cual es la tabla a utilizar
 
       db.sequelize.query(ins_sql) // lee el diccionaro de datos
         .then(data => {
-          //console.log('============== Definicion Schema>>>>', data);
+          //console.log('============== Definicion Schema=====', data[0][0]);
           // console.log('=====USENODATA data=======',data)
 
           if (!data.length || !data[0][0].tip_obj) {  //  No hay tabla
@@ -325,13 +327,13 @@ exports.sql = (req, res) => {
           // var est_campo = {};
           var sw_timestamp = false
           //  Generamos la estructura de la tabla en base de los datos traidos
-          for (var i = 0; i < data[0].length; i++) {
+          for (let i in data[0]) {
 
             nom_campo = data[0][i].cam_dat.trim().toLowerCase(); // pasamos a minusculas
             tip_campo = data[0][i].tip_dat.toLowerCase().substring(0, 3);
             val_defa = data[0][i].val_dat ? data[0][i].val_dat.trim() : ''
             // val_defa = data[0][i].vvu_dat.trim();  // valor vue
-
+            console.log('Nombre del campo,tipo, valor=====>>>',nom_campo,tip_campo,val_defa)
             if (nom_campo == 'timestamp') {
               sw_timestamp = true
               tip_cam = 'tsp'
@@ -451,10 +453,10 @@ exports.sql = (req, res) => {
             // comillas="${"+"'"+"}"
             comillas = "'"
 
-            //console.log('Indice campo===>',nom_cam,data[0]) 
             // busca el campo en la definicion para ver su tipo de valor 
-            for (var i = 0; i < data[0].length; i++) {
-              //console.log('Busca campo===>',nom_cam,data[0][i].cam_dat.toLowerCase()) 
+            //for (var i = 0; i < data[0].length; i++) {
+              for (let i in data[0]) {
+            //console.log('Busca campo===>',nom_cam,data[0][i].cam_dat.toLowerCase()) 
 
 
               if (nom_cam.trim().toLocaleLowerCase() == data[0][i].cam_dat.trim().toLowerCase()) {
@@ -470,11 +472,11 @@ exports.sql = (req, res) => {
               }
             }
 
-            if (view.tip_obj == 'MODEL') {
+            if (view.tip_obj.trim() == 'MODEL') {
               //  con_ind = con_ind + nom_cam + ' : '+comillas+'${m.' + nom_cam + '}'+comillas+','
               con_ind = con_ind + nom_cam + ' : m.' + nom_cam + ',';
             }
-            if (view.tip_obj == 'VIEW') {
+            if (view.tip_obj.trim() == 'VIEW') {
               if (con_ind.length > 0)
                 con_ind = con_ind + ' and '
               con_ind = con_ind + exp_ind + '=' + comillas + '${m.' + exp_ind + '}' + comillas
@@ -498,16 +500,16 @@ exports.sql = (req, res) => {
           }
 
           if (con_ind.length > 0) {
-            if (view.tip_obj == 'MODEL')
+            if (view.tip_obj.trim() == 'MODEL')
               con_ind = '{' + con_ind + '}'
             //  con_ind = ' { ' + con_ind + exp_ind + ': m.' + exp_ind + '}'
-            if (view.tip_obj == 'VIEW')
+            if (view.tip_obj.trim() == 'VIEW')
               con_ind = "`" + con_ind + "`"
           }
 
           view.exp_indice = con_ind // Indice a utilizar
 
-          //console.log(' Use nodata Vista ======>',nom_vis,data[0][0].fil_vis.trim().toLowerCase(),'Cond Indice==>'+ con_ind)
+          console.log(' Use nodata Vista ======>',view)
           //console.log('===================================================================== ')
           // console.log('USENODATA con_ind ===>',con_ind)
 
@@ -855,7 +857,7 @@ exports.sql = (req, res) => {
 
       db.sequelize.query(ins_sql, opciones)
         .then(data => {
-          console.log('<=========query resultado===>', data)
+          console.log('<=========query resultado===>', data[0])
           res.send(data[0]);
         })
         .catch(err => {
