@@ -280,7 +280,7 @@ exports.sql = (req, res) => {
 
     case 'USENODATA':
       nom_vis = nom_vis.toLowerCase()
-      if (options.dialect='Postgres')
+      if (options.dialect=='postgres')
           ins_sql = "select * from p_schema('" + nom_vis + "')"
         else
           ins_sql = "exec p_schema '" + nom_vis + "'"
