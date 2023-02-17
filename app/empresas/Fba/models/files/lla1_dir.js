@@ -12,15 +12,15 @@ module.exports = function(sequelize, DataTypes) {
 'gln_dir': {type: DataTypes.CHAR(14),allowNull: false,defaultValue: ' ',comment: 'CODIDO GLN' },
 'not_dir': {type: DataTypes.STRING(512),allowNull: false,comment: 'NOTA DE LA DIRECCION' },
 'timestamp': {type: DataTypes.INTEGER,allowNull: true,defaultValue: '0',comment: 'TIMESTAMP' },
-'key_pri': {type: DataTypes.INTEGER,allowNull: false,defaultValue: '0',comment: "LLAVE PRIMARIA PARA LA ACTUALIZACION DE VISTAS" , primaryKey: true },
 
 'usu_usu': {field: 'usu_usu',type: DataTypes.SMALLINT },
 'usu_cre': {field: 'usu_cre',type: DataTypes.SMALLINT },
 'tie_uac': {field: 'tie_uac',type: DataTypes.DATE },
 'tie_cre': {field: 'tie_cre',type: DataTypes.DATE },
+'key_pri': {field: 'key_pri',type: DataTypes.INTEGER },
 
 
 createdAt: {field: 'tie_cre',type: DataTypes.DATE,},
 updatedAt: {field: 'tie_uac',type: DataTypes.DATE,} 
-  }, { tableName: 'man_comedat'});
+  }, { tableName: 'man_comedir'});
 };

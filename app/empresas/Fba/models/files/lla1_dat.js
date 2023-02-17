@@ -22,7 +22,6 @@ module.exports = function(sequelize, DataTypes) {
 'tie_cre': {field: 'tie_cre',type: DataTypes.DATE },
 
 
-
 createdAt: {field: 'tie_cre',type: DataTypes.DATE,},
 updatedAt: {field: 'tie_uac',type: DataTypes.DATE,} 
   }, { tableName: 'man_comedat'});

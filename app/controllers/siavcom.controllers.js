@@ -265,25 +265,35 @@ exports.sql = (req, res) => {
       //  console.log('====== IN nom_tab ================', nom_tab);
 
       //  console.log('====== Order by  ================', orden);
-      db[nom_tab].findAll(condicion, orden)
-        .then(data => {
-          res.send(data);
-        })
-        .catch(err => {
-          console.log('Error AXIOS', err);
-          res.writeHead(400, err.message, { 'Content-Type': 'text/plain' });
-          res.send();
-        });
+      if (db[nom_tab]) {
 
+        db[nom_tab].findAll(condicion, orden)
+          .then(data => {
+            res.send(data);
+          })
+          .catch(err => {
+            console.log('Error AXIOS', err);
+            res.writeHead(400, err.message, { 'Content-Type': 'text/plain' });
+            res.send();
+          });
+
+
+      } else {
+        console.error('No existe sequelize model', nom_tab);
+        res.writeHead(400, 'No existe sequelize model ' + nom_tab, { 'Content-Type': 'text/plain' });
+        res.send();
+
+
+      }
       break;
 
 
     case 'USENODATA':
       nom_vis = nom_vis.toLowerCase()
-      if (options.dialect=='postgres')
-          ins_sql = "select * from p_schema('" + nom_vis + "')"
-        else
-          ins_sql = "exec p_schema '" + nom_vis + "'"
+      if (options.dialect == 'postgres')
+        ins_sql = "select * from p_schema('" + nom_vis + "')"
+      else
+        ins_sql = "exec p_schema '" + nom_vis + "'"
 
       // buscar en la tabla de indices cual es la tabla a utilizar
 
@@ -333,7 +343,7 @@ exports.sql = (req, res) => {
             tip_campo = data[0][i].tip_dat.toLowerCase().substring(0, 3);
             val_defa = data[0][i].val_dat ? data[0][i].val_dat.trim() : ''
             // val_defa = data[0][i].vvu_dat.trim();  // valor vue
-            console.log('Nombre del campo,tipo, valor=====>>>',nom_campo,tip_campo,val_defa)
+            console.log('Nombre del campo,tipo, valor=====>>>', nom_campo, tip_campo, val_defa)
             if (nom_campo == 'timestamp') {
               sw_timestamp = true
               tip_cam = 'tsp'
@@ -455,8 +465,8 @@ exports.sql = (req, res) => {
 
             // busca el campo en la definicion para ver su tipo de valor 
             //for (var i = 0; i < data[0].length; i++) {
-              for (let i in data[0]) {
-            //console.log('Busca campo===>',nom_cam,data[0][i].cam_dat.toLowerCase()) 
+            for (let i in data[0]) {
+              //console.log('Busca campo===>',nom_cam,data[0][i].cam_dat.toLowerCase()) 
 
 
               if (nom_cam.trim().toLocaleLowerCase() == data[0][i].cam_dat.trim().toLowerCase()) {
@@ -509,7 +519,7 @@ exports.sql = (req, res) => {
 
           view.exp_indice = con_ind // Indice a utilizar
 
-          console.log(' Use nodata Vista ======>',view)
+          console.log(' Use nodata Vista ======>', view)
           //console.log('===================================================================== ')
           // console.log('USENODATA con_ind ===>',con_ind)
 
@@ -570,7 +580,7 @@ exports.sql = (req, res) => {
               // Obtiene el timestamp y key_pri actual
               transaction.commit();
 
-              console.log('================ datos insertados  condicion >>>>>', result, condicion)
+              console.log('================ datos insertados  condicion >>>>>', result, condicion.where)
               db[nom_tab].findAll(
 
                 {
@@ -879,36 +889,36 @@ exports.sql = (req, res) => {
       db.sequelize.query(ins_sql) // genera query
         .then(async data => {
           let ren = 0
-         
+
           for (let ren = 0; ren < data[0].length; ren++) { // genera tantas vistas como sea posible
             const query = data[0][ren].query;
-            
-            let swEnd=false
-            
+
+            let swEnd = false
+
             console.log('<========= Ejecuta  query===>', query)
             do {
-            
+
               await db.sequelize.query(query)
                 .then(data => {
-                  console.log('<=========Query ejecutado =======>', query)
+                  console.log('<========= Query ejecutado correctamente=======>', query)
                   swEnd = true
-                  
+
                 })
                 .catch(err => {
-                  ren=data[0].length
+                  ren = data[0].length
                   console.log('No se pudo ejecutar query ==', err)
-                  res.writeHead(400, "query :" + query + ' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
+                  res.writeHead(400, "No se pudo ejecutar :" + query + ' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
                   res.send()
                   return
                 })
             } while (!swEnd)
           }
-          console.log('Genero Todo. Generará modelo===>')
+          console.log('Genero Todo con exito. Generará modelo===>', nom_tab)
           await genModel(nom_tab, db, dir_emp)
 
         }).
         catch(err => {
-          console.log('No se pudo ejecutar ==', err)
+          console.log('Error genera todo ==', err)
           res.writeHead(400, "query :" + ins_sql + ' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
           res.send();
           return
@@ -1039,9 +1049,9 @@ exports.sql = (req, res) => {
           db.sequelize.query(query)
             .then(data => {
               console.log('<=========query GENERA INDICES=======>', data)
-           //   this.genModel(nom_tab, db, dir_emp)
+              //   this.genModel(nom_tab, db, dir_emp)
               res.send(query)
-              
+
             })
             .catch(err => {
               console.log('No se pudo ejecutar ==', err)
@@ -1067,7 +1077,7 @@ exports.sql = (req, res) => {
 
       db.sequelize.query(ins_sql, opciones)
         .then(data => {
-          console.log('<========= P_gen_vistas_sql  ===>', data[0].length, data[0], data[0].length)
+          console.log('<========= P_gen_vistas_sql resultado ===>', data[0].length, data[0])
           for (let ren = 0; ren < data[0].length; ren++) { // genera tantas vistas como sea posible
             const query = data[0][ren].query;
 
@@ -1136,14 +1146,14 @@ async function genModel(nom_tab, db, dir_emp) {
 
   console.log('GENERA MODELO ')
   try {
-    ins_sql = `select F_gen_modelo(nom_ind) as query,nom_ind from comeind where lower(nom_tab)=lower('${nom_tab}') and num_ind=1 `
+    ins_sql = `select F_gen_modelo(nom_ind) as query,nom_ind from man_comeind where lower(nom_tab)=lower('${nom_tab}') and num_ind=1 `
     db.sequelize.query(ins_sql)
       .then(data => {
-        if (!data[0][0] || data[0][0].query.trim() == '') { // No hay modelo a generar
+        if (!data[0][0] || data[0][0].query == null || data[0][0].query.trim() == '') { // No hay modelo a generar
           return
         }
         query = data[0][0].query
-        const nom_ind = data[0][0].nom_ind
+        const nom_ind = data[0][0].nom_ind.trim()
         const modelo = dir_emp + 'files/' + nom_ind.toLowerCase() + '.js'
         console.log('<=========Escribe Sequelize MODEL  Node Server=======>', modelo)
         //const fs = require('fs')
