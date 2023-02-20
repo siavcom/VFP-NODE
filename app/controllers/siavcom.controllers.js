@@ -341,7 +341,7 @@ exports.sql = (req, res) => {
 
             nom_campo = data[0][i].cam_dat.trim().toLowerCase(); // pasamos a minusculas
             tip_campo = data[0][i].tip_dat.toLowerCase().substring(0, 3);
-            val_defa = data[0][i].val_dat ? data[0][i].val_dat.trim() : ''
+            val_defa = data[0][i].vue_dat ? data[0][i].vue_dat.trim() : ''
             // val_defa = data[0][i].vvu_dat.trim();  // valor vue
             console.log('Nombre del campo,tipo, valor=====>>>', nom_campo, tip_campo, val_defa)
             if (nom_campo == 'timestamp') {
@@ -445,7 +445,7 @@ exports.sql = (req, res) => {
           //console.log('Data===>',data[0][0])
           let exp_ind = ''
           if (data[0][0].fil_vis != null)
-            exp_ind = data[0][0].fil_vis.trim().toLowerCase();
+            exp_ind = data[0][0].fil_vis.trim() //.toLowerCase();
 
           let con_ind = ''
           let nom_cam = ''
