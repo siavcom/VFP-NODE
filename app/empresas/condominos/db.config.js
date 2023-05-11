@@ -1,10 +1,10 @@
 module.exports = {
   host: "176.16.200.20",
-  database: "Demo",
+  database: "condominos",
   dialect: "postgres",
   port: 5432,
   pool: {
-    max: 100, //numero de conexiones
+    max: 5, //numero de conexiones
     min: 0, //minimum number of connection in pool
     acquire: 30000, //maximum time, in milliseconds, that pool will try to get connection before throwing error
 

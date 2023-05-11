@@ -14,6 +14,7 @@ var CryptoJS = require('crypto-js');
 const fs = require('fs');
 
 const { Sequelize, DataTypes, QueryTypes } = require('sequelize');
+const { Connection } = require('tedious');
 
 const Op = Sequelize.Op;  // Operaciones logicas del Sequeliz
 
@@ -73,7 +74,7 @@ app/empresas/Demo/db.config.js
 
   var dir_emp = process.cwd() + '/app/empresas/' + nom_emp // directorio de empresas 
 
-  options = require(dir_emp + '/db.config.js') //[env] // crea el archivo de env
+  options = require(dir_emp + '/db.config.js') 
   console.log('Lee empresa options', options)
   //console.log('Lee archivo de configuracion====>>>',options)
   if (!options) {
@@ -95,7 +96,7 @@ app/empresas/Demo/db.config.js
   sequelize.authenticate()
     .then(() => {
 
-
+       
       const name = base64(fec_act + nom_emp + user) // generamos id de conexion
       const db = {}  // objeto base de datos
       // db[name] = name // objeto base de datos
@@ -147,6 +148,7 @@ app/empresas/Demo/db.config.js
         empresa: nom_emp,
         db: db,
         dir_emp: dir_emp,
+        dialect: options.dialect
       }
 
       // module.exports.conexion 
@@ -204,7 +206,7 @@ exports.sql = (req, res) => {
 
   const db = conexion[id_con].db // asignamos el objeto de base de datos
   const dir_emp = conexion[id_con].dir_emp
-
+  const dialect = conexion[id_con].dialect
 
   //console.log('Base de datos',db)
   // console.log('db a utilizar=====>',db)
@@ -241,9 +243,6 @@ exports.sql = (req, res) => {
 
 
   //let nom_tab = 'man_come' + nom_vis.substr(-3, 3); // Nombre de la tabla de mantenimiento
-
-
-  console.log('req ======>>>>>>>', req.body, condicion)
   // aqui me quede , no hay condicion 
   const orden = { order: {} }
   let ins_sql = ''
@@ -289,11 +288,11 @@ exports.sql = (req, res) => {
 
 
     case 'USENODATA':
-      nom_vis = nom_vis.toLowerCase()
-      if (options.dialect == 'postgres')
-        ins_sql = "select * from p_schema('" + nom_vis + "')"
+      console.log('USENODATA dialect===>',dialect)
+      if (dialect == 'postgres')
+        ins_sql = `select * from p_schema('${ nom_vis}')`
       else
-        ins_sql = "exec p_schema '" + nom_vis + "'"
+        ins_sql = `exec p_schema '${nom_vis}'`
 
       // buscar en la tabla de indices cual es la tabla a utilizar
 
@@ -301,9 +300,9 @@ exports.sql = (req, res) => {
         .then(data => {
           //console.log('============== Definicion Schema=====', data[0][0]);
           // console.log('=====USENODATA data=======',data)
-
-          if (!data.length || !data[0][0].tip_obj) {  //  No hay tabla
-            res.writeHead(400, 'No existe sqlView ===> ' + nom_vis, { 'Content-Type': 'text/plain' });
+          console.log('USENODATA data.length===>',data[0])
+          if (!data[0][0] || data[0][0].length==0) {  //  No hay tabla
+            res.writeHead(400, 'sqlView Invalid : ' + nom_vis, { 'Content-Type': 'text/plain' });
             res.send();
             return false;
           }
@@ -489,7 +488,8 @@ exports.sql = (req, res) => {
             if (view.tip_obj.trim() == 'VIEW') {
               if (con_ind.length > 0)
                 con_ind = con_ind + ' and '
-              con_ind = con_ind + exp_ind + '=' + comillas + '${m.' + exp_ind + '}' + comillas
+//              con_ind = con_ind + exp_ind + '=' + comillas + '${m.' + exp_ind + '}' + comillas
+              con_ind = con_ind + nom_cam + '=' + comillas + '${m.' + nom_cam + '}' + comillas
             }
 
             exp_ind = exp_ind.substring(pos + 1);
@@ -525,7 +525,7 @@ exports.sql = (req, res) => {
 
 
           res.send(view); // enviamos la vista
-          return
+          return 
           /* ver 1
           }) // fin then.data
 
@@ -538,10 +538,10 @@ exports.sql = (req, res) => {
 
         }) // fin then.data
         .catch(err => {
-          console.log('No se pudo ejecutar', err)
-          res.writeHead(400, "SQL ERROR " + ins_sql, { 'Content-Type': 'text/plain' });
+          console.log('USENODATA SQLError'+ins_sql, err)
+          res.writeHead(400, "USENODATA SQL ERROR " + ins_sql, { 'Content-Type': 'text/plain' });
           res.send();
-          return
+          return 
         });
       // res.send(db[nom_vis]);
 
@@ -562,8 +562,10 @@ exports.sql = (req, res) => {
     case 'INSERT':
 
       if (!datos) {
-        res.writeHead(400, 'No hay datos as insertar', { 'Content-Type': 'text/plain' });
-        res.send();
+        writeHead(res,'No hay datos as insertar')
+
+//        res.writeHead(400, 'No hay datos as insertar', { 'Content-Type': 'text/plain' });
+//        res.send();
 
         return;
       }
@@ -598,25 +600,28 @@ exports.sql = (req, res) => {
                 .catch(err => {     // Error al leer el TimeStamp
                   console.error('Insert commit Error', err)
                   transaction.rollback();
-                  res.writeHead(400, err.message, { 'Content-Type': 'text/plain' });
-                  res.send();
+                  writeHead(res,err.message)
+
                 });
               ///////////////////
               //res.send(data);
             })
-            .catch(err => {
-              console.error('Insert Error ', err)
+            .catch(error => {
+              let men_err='Insert error '+nom_tab ;//+ err.message
               transaction.rollback();
-              res.writeHead(400, err.message, { 'Content-Type': 'text/plain' });
-              res.send();
+              writeHead(res,men_err,error);
+
+//              console.error('Insert Error =====>>>>', men_err,men_err.length)
+//              if (men_err.length>128) men_err=men_err.substring(128)    
+//              res.writeHead(400, men_err, { 'Content-Type': 'text/plain' });
+//              res.send();
 
             });
         })
         .catch(err => {     // Error al leer el modelo en  sequelize
           console.error('Insert transaction Error', err)
           transaction.rollback();
-          res.writeHead(400, err.message, { 'Content-Type': 'text/plain' });
-          res.send();
+          writeHead(res,men_err)
         });
 
 
@@ -625,16 +630,14 @@ exports.sql = (req, res) => {
     case 'UPDATE':
 
       if (!datos) {
-        res.writeHead(400, "No DATA to update", { 'Content-Type': 'text/plain' });
-        res.send();
+        writeHead(res,"No DATA to update")
 
         return;
       }
 
 
       if (datos.key_pri == 0) {
-        res.writeHead(400, "No se puede actualizar un registro con key_pri=0", { 'Content-Type': 'text/plain' });
-        res.send();
+        writeHead(res,"Can't not update key_pri=0")
 
       }
 
@@ -673,8 +676,7 @@ exports.sql = (req, res) => {
 
                 })
                 .catch(err => {     // Error al leer el TimeStamp
-                  res.writeHead(400, err.message, { 'Content-Type': 'text/plain' });
-                  res.send();
+                  writeHead(res,err.message)
                   console.error('Update Commit Error', err)
                   transaction.rollback();
 
@@ -683,16 +685,16 @@ exports.sql = (req, res) => {
               //res.send(data);
             })
             .catch(err => {
-              res.writeHead(400, err.message, { 'Content-Type': 'text/plain' });
-              res.send();
+              writeHead(res,err.message)
+
               console.error('Update Error ', err)
               transaction.rollback();
 
             })
         })
         .catch(err => {
-          res.writeHead(400, err.message, { 'Content-Type': 'text/plain' });
-          res.send();
+          writeHead(res,err.message)
+
           console.error('Update Transaction Error ', err)
           transaction.rollback();
 
@@ -705,8 +707,8 @@ exports.sql = (req, res) => {
     case 'DELETE':
 
       if (!condicion) {
-        res.writeHead(400, "No hay condicion WHERE", { 'Content-Type': 'text/plain' });
-        res.send();
+        writeHead(res,'Invalid condition WHERE')
+
         return;
       }
       /*
@@ -736,8 +738,7 @@ exports.sql = (req, res) => {
         })
         .catch(err => {
           console.log('DELETE error===>', err)
-          res.writeHead(400, err.message, { 'Content-Type': 'text/plain' });
-          res.sendStatus(err);
+          writeHead(res, err.message);
         });
 
       break;
@@ -852,8 +853,7 @@ exports.sql = (req, res) => {
         })
         .catch(err => {
           console.log('No se pudo ejecutar ==', err)
-          res.writeHead(400, "SQL ERROR " + ins_sql, { 'Content-Type': 'text/plain' });
-          res.send();
+          writeHead(res, "SQL ERROR " + ins_sql);
         });
 
       break;
@@ -872,8 +872,7 @@ exports.sql = (req, res) => {
         })
         .catch(err => {
           console.log('No se pudo ejecutar ==', err)
-          res.writeHead(400, "SQL ERROR " + ins_sql, { 'Content-Type': 'text/plain' });
-          res.send();
+          writeHead(res, "SQL ERROR " + ins_sql);
         });
 
       break;
@@ -883,44 +882,52 @@ exports.sql = (req, res) => {
       opciones.mapToModel = true
 
       // se pasa el nombre de la tabla y si es posgres o MSSQL
-      ins_sql = `select P_gen_todo('${options.dialect}','${nom_tab}') as query`
+      ins_sql = `select P_gen_todo('${dialect}','${nom_tab}') as query`
       console.log('<========= P_gen_todo ===>', ins_sql)
 
       db.sequelize.query(ins_sql) // genera query
         .then(async data => {
-          let ren = 0
+          //let ren = 0
 
+          let swEnd = false
+          var error=''
           for (let ren = 0; ren < data[0].length; ren++) { // genera tantas vistas como sea posible
             const query = data[0][ren].query;
 
-            let swEnd = false
+       
 
-            console.log('<========= Ejecuta  query===>', query)
-            do {
+            console.log('<========= Ejecutara query===>', query,'<=====')
+           // do {
 
               await db.sequelize.query(query)
                 .then(data => {
-                  console.log('<========= Query ejecutado correctamente=======>', query)
-                  swEnd = true
+                  console.log('<========= Query ejecutado correctamente=======>', data)
+                 // swEnd = true
 
                 })
-                .catch(err => {
-                  ren = data[0].length
-                  console.log('No se pudo ejecutar query ==', err)
-                  res.writeHead(400, "No se pudo ejecutar :" + query + ' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
-                  res.send()
-                  return
+                .catch(que_err => {
+                  swEnd=true
+                  error=query+', '+que_err
+                  console.log('No se pudo ejecutar query =====> ', error)
+                  
                 })
-            } while (!swEnd)
+                if (swEnd) break
+           // } while (!swEnd)
+          } // Fin For 
+
+          if (!swEnd){ // Si no hay error
+            console.log('Genero Todo con exito. Generará modelo===>', nom_tab)
+            await genModel(nom_tab, db, dir_emp)
           }
-          console.log('Genero Todo con exito. Generará modelo===>', nom_tab)
-          await genModel(nom_tab, db, dir_emp)
-
+          else
+            { // Hay error
+              writeHead(res, "query :" +error);
+            return
+          }
         }).
         catch(err => {
-          console.log('Error genera todo ==', err)
-          res.writeHead(400, "query :" + ins_sql + ' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
-          res.send();
+          console.log('Error genera todo ==>>', err)
+          writeHead(res,"query :" + ins_sql +err);
           return
         })
 
@@ -1039,7 +1046,7 @@ exports.sql = (req, res) => {
       opciones.mapToModel = true
       // se pasa el nombre de la tabla y si es posgres o MSSQL
 
-      ins_sql = `select * F_gen_indices('${options.dialect}','${nom_tab}') `
+      ins_sql = `select * F_gen_indices('${dialect}','${nom_tab}') `
 
       db.sequelize.query(ins_sql, opciones)
         .then(data => {
@@ -1061,8 +1068,7 @@ exports.sql = (req, res) => {
         })
         .catch(err => {
           console.log('No se pudo ejecutar ==', err)
-          res.writeHead(400, "query :" + ins_sql + ' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
-          res.send();
+          writeHead(res, "query :" + ins_sql + ' SQL ERROR :' + err);
         });
 
       break;
@@ -1070,10 +1076,10 @@ exports.sql = (req, res) => {
     case 'GENVISTASSQL':
       opciones.mapToModel = true
       // se pasa el dialecto (posgres o MSSQL) y nombre de la tabla y si es 
-      if (options.dialect = 'postgres')
-        ins_sql = `select P_gen_vista('${options.dialect}','${nom_tab}') as query`
+      if (dialect = 'postgres')
+        ins_sql = `select P_gen_vista('${dialect}','${nom_tab}') as query`
       else
-        ins_sql = `exec  P_gen_vista '${options.dialect}','${nom_tab}' `
+        ins_sql = `exec  P_gen_vista '${dialect}','${nom_tab}' `
 
       db.sequelize.query(ins_sql, opciones)
         .then(data => {
@@ -1089,16 +1095,14 @@ exports.sql = (req, res) => {
               })
               .catch(err => {
                 console.log('No se pudo ejecutar ==', err)
-                res.writeHead(400, "query :" + ins_sql + ' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
-                res.send();
+                writeHead(res, "query :" + ins_sql + ' SQL ERROR :' + err);
               });
           }
 
         })
         .catch(err => {
           console.log('No se pudo ejecutar ==', err)
-          res.writeHead(400, "SQL ERROR " + ins_sql, { 'Content-Type': 'text/plain' });
-          res.send();
+          writeHead(res, "SQL ERROR " + ins_sql);
         });
 
       break;
@@ -1119,8 +1123,7 @@ exports.sql = (req, res) => {
         }) //  Fin promesa
         .catch(err => {
           console.log('No se pudo generar MODEL ', err)
-          res.writeHead(400, "NODE ERROR :" + err, { 'Content-Type': 'text/plain' });
-          res.send();
+          writeHead(res, "NODE ERROR :" + err, );
         });
 
       break;
@@ -1136,7 +1139,21 @@ exports.sql = (req, res) => {
 //////////////////////////////////////////////////////
 /////////////////  Funciones /////////////////////////
 //////////////////////////////////////////////////////
+function writeHead(res,men_err,error ) {
 
+  console.error('Sequelize error =',men_err)
+    if (error && error.errors){
+
+      for (let i=0;i<error.errors.length;i++){
+        console.error('Sequelize errores ====>>>',error.errors[i].message,'<<<========')
+        men_err=men_err+','+error.errors[i].message
+        }
+
+    }
+    console.error('Sequelize error ======>',men_err)
+    res.writeHead(400, men_err, { 'Content-Type': 'text/plain' });
+    res.send();
+}
 
 ///////////////////////////////////////////
 // Genera Model para sequelize 
