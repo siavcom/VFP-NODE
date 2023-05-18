@@ -74,7 +74,7 @@ app/empresas/Demo/db.config.js
 
   var dir_emp = process.cwd() + '/app/empresas/' + nom_emp // directorio de empresas 
 
-  options = require(dir_emp + '/db.config.js') 
+  options = require(dir_emp + '/db.config.js')
   console.log('Lee empresa options', options)
   //console.log('Lee archivo de configuracion====>>>',options)
   if (!options) {
@@ -96,7 +96,7 @@ app/empresas/Demo/db.config.js
   sequelize.authenticate()
     .then(() => {
 
-       
+
       const name = base64(fec_act + nom_emp + user) // generamos id de conexion
       const db = {}  // objeto base de datos
       // db[name] = name // objeto base de datos
@@ -173,7 +173,7 @@ app/empresas/Demo/db.config.js
 
 
 // comienzan los requerimientos a la base de datos
-exports.sql = (req, res) => {
+exports.sql = async (req, res) => {
   // const conexion=this.conexion; 
   //console.log('Conexion Sql =====>', conexion)
 
@@ -288,9 +288,9 @@ exports.sql = (req, res) => {
 
 
     case 'USENODATA':
-      console.log('USENODATA dialect===>',dialect)
+      console.log('USENODATA dialect===>', dialect)
       if (dialect == 'postgres')
-        ins_sql = `select * from p_schema('${ nom_vis}')`
+        ins_sql = `select * from p_schema('${nom_vis}')`
       else
         ins_sql = `exec p_schema '${nom_vis}'`
 
@@ -300,8 +300,8 @@ exports.sql = (req, res) => {
         .then(data => {
           //console.log('============== Definicion Schema=====', data[0][0]);
           // console.log('=====USENODATA data=======',data)
-          console.log('USENODATA data.length===>',data[0])
-          if (!data[0][0] || data[0][0].length==0) {  //  No hay tabla
+          console.log('USENODATA data.length===>', data[0])
+          if (!data[0][0] || data[0][0].length == 0) {  //  No hay tabla
             res.writeHead(400, 'sqlView Invalid : ' + nom_vis, { 'Content-Type': 'text/plain' });
             res.send();
             return false;
@@ -488,7 +488,7 @@ exports.sql = (req, res) => {
             if (view.tip_obj.trim() == 'VIEW') {
               if (con_ind.length > 0)
                 con_ind = con_ind + ' and '
-//              con_ind = con_ind + exp_ind + '=' + comillas + '${m.' + exp_ind + '}' + comillas
+              //              con_ind = con_ind + exp_ind + '=' + comillas + '${m.' + exp_ind + '}' + comillas
               con_ind = con_ind + nom_cam + '=' + comillas + '${m.' + nom_cam + '}' + comillas
             }
 
@@ -525,7 +525,7 @@ exports.sql = (req, res) => {
 
 
           res.send(view); // enviamos la vista
-          return 
+          return
           /* ver 1
           }) // fin then.data
 
@@ -538,10 +538,10 @@ exports.sql = (req, res) => {
 
         }) // fin then.data
         .catch(err => {
-          console.log('USENODATA SQLError'+ins_sql, err)
+          console.log('USENODATA SQLError' + ins_sql, err)
           res.writeHead(400, "USENODATA SQL ERROR " + ins_sql, { 'Content-Type': 'text/plain' });
           res.send();
-          return 
+          return
         });
       // res.send(db[nom_vis]);
 
@@ -562,10 +562,10 @@ exports.sql = (req, res) => {
     case 'INSERT':
 
       if (!datos) {
-        writeHead(res,'No hay datos as insertar')
+        writeHead(res, 'No hay datos as insertar')
 
-//        res.writeHead(400, 'No hay datos as insertar', { 'Content-Type': 'text/plain' });
-//        res.send();
+        //        res.writeHead(400, 'No hay datos as insertar', { 'Content-Type': 'text/plain' });
+        //        res.send();
 
         return;
       }
@@ -600,28 +600,24 @@ exports.sql = (req, res) => {
                 .catch(err => {     // Error al leer el TimeStamp
                   console.error('Insert commit Error', err)
                   transaction.rollback();
-                  writeHead(res,err.message)
+                  writeHead(res, err.message)
 
                 });
               ///////////////////
               //res.send(data);
             })
             .catch(error => {
-              let men_err='Insert error '+nom_tab ;//+ err.message
+              let men_err = 'Insert error ' + nom_tab;//+ err.message
               transaction.rollback();
-              writeHead(res,men_err,error);
+              writeHead(res, men_err, error);
 
-//              console.error('Insert Error =====>>>>', men_err,men_err.length)
-//              if (men_err.length>128) men_err=men_err.substring(128)    
-//              res.writeHead(400, men_err, { 'Content-Type': 'text/plain' });
-//              res.send();
 
             });
         })
         .catch(err => {     // Error al leer el modelo en  sequelize
           console.error('Insert transaction Error', err)
           transaction.rollback();
-          writeHead(res,men_err)
+          writeHead(res, men_err)
         });
 
 
@@ -630,39 +626,48 @@ exports.sql = (req, res) => {
     case 'UPDATE':
 
       if (!datos) {
-        writeHead(res,"No DATA to update")
+        writeHead(res, "No DATA to update")
 
         return;
       }
 
-
       if (datos.key_pri == 0) {
-        writeHead(res,"Can't not update key_pri=0")
+        writeHead(res, "Can't not update key_pri=0")
 
       }
 
-
       const key_pri = datos.key_pri;
-      // aqui voy
+      
       delete datos['key_pri']   // borramos el key pri de los datos a actualizar
       delete datos['val_vista'];
 
-      db.sequelize.transaction({ autocommit: false })
+
+      if (typeof datos.timestamp!='number'){  // No es Postgres
+              // MSSQL buffer
+        const buffer =datos.timestamp
+        datos.timestamp = Buffer.from(buffer);
+
+        // base64 
+        //Buffer.from(binaryPhoto).toString('base64')
+      }
+
+       ///////////////   TRANSACTION ////////////
+      /*
+       db.sequelize.transaction({ autocommit: false })
         .then(transaction => {
           console.log('========== Begin trans datos a actualizar =======', nom_tab, key_pri, datos);
 
+       */   
           db[nom_tab].update(datos, {
             where: { key_pri: key_pri },
             returning: false,
             plain: false,
-            transaction: transaction
+            //transaction: transaction
           })
-
-
             // db[nom_vis].upsert(dat_act, condicion)
             .then((result) => {
               console.log('update respuesta  =====>>>', result)
-              transaction.commit()
+              // transaction.commit()
               // Obtiene el timestamp actual
               db[nom_tab].findAll(
                 {
@@ -676,29 +681,35 @@ exports.sql = (req, res) => {
 
                 })
                 .catch(err => {     // Error al leer el TimeStamp
-                  writeHead(res,err.message)
+                  writeHead(res, 'Update error',err)
                   console.error('Update Commit Error', err)
-                  transaction.rollback();
+                 // transaction.rollback();
 
                 });
               ///////////////////
               //res.send(data);
             })
-            .catch(err => {
-              writeHead(res,err.message)
+            .catch(error => {
+              console.error('Update SQL error=>> ', error)
+      
+               writeHead(res, 'Update Error',error)
 
-              console.error('Update Error ', err)
-              transaction.rollback();
+              //transaction.rollback();
 
             })
-        })
+        //} )  fin transaction
+        /*/////////////// Transaction Error ///////////
+        
         .catch(err => {
-          writeHead(res,err.message)
+          writeHead(res, err.message)
 
           console.error('Update Transaction Error ', err)
           transaction.rollback();
 
         });
+        */
+
+
 
 
       break;
@@ -707,7 +718,7 @@ exports.sql = (req, res) => {
     case 'DELETE':
 
       if (!condicion) {
-        writeHead(res,'Invalid condition WHERE')
+        writeHead(res, 'Invalid condition WHERE')
 
         return;
       }
@@ -882,7 +893,11 @@ exports.sql = (req, res) => {
       opciones.mapToModel = true
 
       // se pasa el nombre de la tabla y si es posgres o MSSQL
-      ins_sql = `select P_gen_todo('${dialect}','${nom_tab}') as query`
+      if (dialect == 'postgres')
+        ins_sql = `select P_gen_todo('${dialect}','${nom_tab}') as query`
+      else
+        ins_sql = `exec P_gen_todo '${dialect}','${nom_tab}' `
+
       console.log('<========= P_gen_todo ===>', ins_sql)
 
       db.sequelize.query(ins_sql) // genera query
@@ -890,44 +905,43 @@ exports.sql = (req, res) => {
           //let ren = 0
 
           let swEnd = false
-          var error=''
+          var error = ''
           for (let ren = 0; ren < data[0].length; ren++) { // genera tantas vistas como sea posible
             const query = data[0][ren].query;
 
-       
 
-            console.log('<========= Ejecutara query===>', query,'<=====')
-           // do {
 
-              await db.sequelize.query(query)
-                .then(data => {
-                  console.log('<========= Query ejecutado correctamente=======>', data)
-                 // swEnd = true
+            console.log('<========= Ejecutara query===>', query, '<=====')
+            // do {
 
-                })
-                .catch(que_err => {
-                  swEnd=true
-                  error=query+', '+que_err
-                  console.log('No se pudo ejecutar query =====> ', error)
-                  
-                })
-                if (swEnd) break
-           // } while (!swEnd)
+            await db.sequelize.query(query)
+              .then(data => {
+                console.log('<========= Query ejecutado correctamente=======>', data)
+                // swEnd = true
+
+              })
+              .catch(que_err => {
+                swEnd = true
+                error = query + ', ' + que_err
+                console.log('No se pudo ejecutar query =====> ', error)
+
+              })
+            if (swEnd) break
+            // } while (!swEnd)
           } // Fin For 
 
-          if (!swEnd){ // Si no hay error
+          if (!swEnd) { // Si no hay error
             console.log('Genero Todo con exito. Generará modelo===>', nom_tab)
-            await genModel(nom_tab, db, dir_emp)
+            await genModel(dialect, nom_tab, db, dir_emp)
           }
-          else
-            { // Hay error
-              writeHead(res, "query :" +error);
+          else { // Hay error
+            writeHead(res, "query :" + error);
             return
           }
         }).
         catch(err => {
           console.log('Error genera todo ==>>', err)
-          writeHead(res,"query :" + ins_sql +err);
+          writeHead(res, "query :" + ins_sql + err);
           return
         })
 
@@ -1045,8 +1059,10 @@ exports.sql = (req, res) => {
 
       opciones.mapToModel = true
       // se pasa el nombre de la tabla y si es posgres o MSSQL
-
-      ins_sql = `select * F_gen_indices('${dialect}','${nom_tab}') `
+      if (dialect == 'postgres')
+        ins_sql = `select * F_gen_indices('${dialect}','${nom_tab}') `
+      else
+        ins_sql = `select dbo.F_gen_indices('${dialect}','${nom_tab}') `
 
       db.sequelize.query(ins_sql, opciones)
         .then(data => {
@@ -1107,10 +1123,10 @@ exports.sql = (req, res) => {
 
       break;
 
-    case 'GENMODELO':
+    case 'GENMODEL':
       opciones.mapToModel = true
 
-      genModel(nom_tab, db, dir_emp)
+      genModel(dialect, nom_tab, db, dir_emp)
         .then((data) => {
 
           if (data == 'Ok') {
@@ -1123,11 +1139,34 @@ exports.sql = (req, res) => {
         }) //  Fin promesa
         .catch(err => {
           console.log('No se pudo generar MODEL ', err)
-          writeHead(res, "NODE ERROR :" + err, );
+          writeHead(res, "NODE ERROR :" + err,);
         });
 
       break;
+    //*****************
+    case 'GENMODELS':
 
+      ins_sql = "select nom_tab from vi_schema where tip_obj='MODEL' group by nom_tab"
+
+      console.log('<========= GENMODELS ===>', ins_sql)
+
+      db.sequelize.query(ins_sql) // genera query
+        .then(async data => {
+          let swEnd = false
+          var error = ''
+          for (let ren = 0; ren < data[0].length; ren++) { // genera tantas vistas como sea posible
+            const nom_tab = data[0][ren].nom_tab;
+            console.log('<========= Generara sequelize Model ===>', query, '<=====')
+            await genModel(dialect, nom_tab, db, dir_emp)
+          } // Fin For 
+        }).catch(err => {
+          console.log('No se pudo ejecutar ==', err)
+          writeHead(res, "SQL ERROR " + ins_sql);
+        });
+      break
+
+
+    //  *******************
 
     default:
     // code block
@@ -1139,31 +1178,64 @@ exports.sql = (req, res) => {
 //////////////////////////////////////////////////////
 /////////////////  Funciones /////////////////////////
 //////////////////////////////////////////////////////
-function writeHead(res,men_err,error ) {
+function writeHead(res, men_err, error) {
 
-  console.error('Sequelize error =',men_err)
-    if (error && error.errors){
+  console.error('Sequelize error ====>',error)
+ 
+  if (error.message)  
+     men_err=men_err+': '+error.message
 
-      for (let i=0;i<error.errors.length;i++){
-        console.error('Sequelize errores ====>>>',error.errors[i].message,'<<<========')
-        men_err=men_err+','+error.errors[i].message
-        }
+    if(error[0])
+      console.log('======<error[0] array >====== ',error[0])
 
+  /*
+  for (const com in error){
+    console.log('===============< arreglo>',com,typeof error[com].isArray ) 
+    if (typeof error[com].isArray==='undefined' &&  error[com][0])
+       console.log('======<error com array >====== ',com,error[com][0])
+      for (const comSeq in error[com])
+        if (typeof error[com][comSeq]!='string' && error[com][comSeq][0] )
+           console.log('======<com array>======> ',comSeq,error[com][comSeq][0])
+
+
+  }
+  */
+  /*message
+  const errObj = {};
+  error.errors.map( er => {
+     errObj[er.path] = er.message;
+  })
+  console.log('errObj Sequelize errores',errObj);
+  */
+
+
+  if (error && error.errors) {
+ //   console.error('Sequelize error.errros ====>', error.errors)
+
+    for (let i = 0; i < error.errors.length; i++) {
+      console.error('Sequelize errores ====>>>', error.errors[i].message, '<<<========')
+      men_err = men_err + ',' + error.errors[i].message
     }
-    console.error('Sequelize error ======>',men_err)
-    res.writeHead(400, men_err, { 'Content-Type': 'text/plain' });
-    res.send();
+
+  }
+  
+  res.writeHead(400, men_err, { 'Content-Type': 'text/plain' });
+  res.send();
 }
 
 ///////////////////////////////////////////
 // Genera Model para sequelize 
 //////////////////////////////////////////
 
-async function genModel(nom_tab, db, dir_emp) {
+async function genModel(dialect, nom_tab, db, dir_emp) {
 
   console.log('GENERA MODELO ')
   try {
-    ins_sql = `select F_gen_modelo(nom_ind) as query,nom_ind from man_comeind where lower(nom_tab)=lower('${nom_tab}') and num_ind=1 `
+    if (dialect == 'postgres')
+      ins_sql = `select F_gen_modelo(nom_ind) as query,nom_ind from man_comeind where lower(nom_tab)=lower('${nom_tab}') and num_ind=1 `
+    else
+      ins_sql = `select dbo.F_gen_modelo(nom_ind) as query,nom_ind from man_comeind where lower(nom_tab)=lower('${nom_tab}') and num_ind=1 `
+
     db.sequelize.query(ins_sql)
       .then(data => {
         if (!data[0][0] || data[0][0].query == null || data[0][0].query.trim() == '') { // No hay modelo a generar
