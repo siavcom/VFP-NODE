@@ -414,7 +414,7 @@ exports.sql = async (req, res) => {
 
             // asignamos los valores a la estructura del campo
             const est_campo = {
-              des_cam: data[0][i].ref_dat.trim(),  // Nombre delcampo
+              des_cam: data[0][i].ref_dat.trim(),  // Descripcion del campo
               tip_cam: tip_campo,   // tipo de dato
               val_cam: val_campo, //data[0][i].val_dat.trim()    // Valor al insertar campo en blanco
               val_def: val_defa
@@ -637,77 +637,77 @@ exports.sql = async (req, res) => {
       }
 
       const key_pri = datos.key_pri;
-      
+
       delete datos['key_pri']   // borramos el key pri de los datos a actualizar
       delete datos['val_vista'];
 
 
-      if (typeof datos.timestamp!='number'){  // No es Postgres
-              // MSSQL buffer
-        const buffer =datos.timestamp
+      if (typeof datos.timestamp != 'number') {  // No es Postgres
+        // MSSQL buffer
+        const buffer = datos.timestamp
         datos.timestamp = Buffer.from(buffer);
 
         // base64 
         //Buffer.from(binaryPhoto).toString('base64')
       }
 
-       ///////////////   TRANSACTION ////////////
+      ///////////////   TRANSACTION ////////////
       /*
        db.sequelize.transaction({ autocommit: false })
         .then(transaction => {
           console.log('========== Begin trans datos a actualizar =======', nom_tab, key_pri, datos);
 
-       */   
-          db[nom_tab].update(datos, {
-            where: { key_pri: key_pri },
-            returning: false,
-            plain: false,
-            //transaction: transaction
-          })
-            // db[nom_vis].upsert(dat_act, condicion)
-            .then((result) => {
-              console.log('update respuesta  =====>>>', result)
-              // transaction.commit()
-              // Obtiene el timestamp actual
-              db[nom_tab].findAll(
-                {
-                  attributes: ['timestamp', 'key_pri'],
-                  where: { key_pri: key_pri },
-                  raw: true,
-                })
-                .then(datos => {  // envia el timestamp     aqui voy checar demas findAll
-                  console.log('==========Dato actualizado datos=======>>>>', datos[0].timestamp)
-                  res.send(datos[0]);
-
-                })
-                .catch(err => {     // Error al leer el TimeStamp
-                  writeHead(res, 'Update error',err)
-                  console.error('Update Commit Error', err)
-                 // transaction.rollback();
-
-                });
-              ///////////////////
-              //res.send(data);
+       */
+      db[nom_tab].update(datos, {
+        where: { key_pri: key_pri },
+        returning: false,
+        plain: false,
+        //transaction: transaction
+      })
+        // db[nom_vis].upsert(dat_act, condicion)
+        .then((result) => {
+          console.log('update respuesta  =====>>>', result)
+          // transaction.commit()
+          // Obtiene el timestamp actual
+          db[nom_tab].findAll(
+            {
+              attributes: ['timestamp', 'key_pri'],
+              where: { key_pri: key_pri },
+              raw: true,
             })
-            .catch(error => {
-              console.error('Update SQL error=>> ', error)
+            .then(datos => {  // envia el timestamp     aqui voy checar demas findAll
+              console.log('==========Dato actualizado datos=======>>>>', datos[0].timestamp)
+              res.send(datos[0]);
+
+            })
+            .catch(err => {     // Error al leer el TimeStamp
+              writeHead(res, 'Update error', err)
+              console.error('Update Commit Error', err)
+              // transaction.rollback();
+
+            });
+          ///////////////////
+          //res.send(data);
+        })
+        .catch(error => {
+          console.error('Update SQL error=>> ', error)
+
+          writeHead(res, 'Update Error', error)
+
+          //transaction.rollback();
+
+        })
+      //} )  fin transaction
+      /*/////////////// Transaction Error ///////////
       
-               writeHead(res, 'Update Error',error)
+      .catch(err => {
+        writeHead(res, err.message)
 
-              //transaction.rollback();
+        console.error('Update Transaction Error ', err)
+        transaction.rollback();
 
-            })
-        //} )  fin transaction
-        /*/////////////// Transaction Error ///////////
-        
-        .catch(err => {
-          writeHead(res, err.message)
-
-          console.error('Update Transaction Error ', err)
-          transaction.rollback();
-
-        });
-        */
+      });
+      */
 
 
 
@@ -1092,7 +1092,7 @@ exports.sql = async (req, res) => {
     case 'GENVISTASSQL':
       opciones.mapToModel = true
       // se pasa el dialecto (posgres o MSSQL) y nombre de la tabla y si es 
-      if (dialect = 'postgres')
+      if (dialect == 'postgres')
         ins_sql = `select P_gen_vista('${dialect}','${nom_tab}') as query`
       else
         ins_sql = `exec  P_gen_vista '${dialect}','${nom_tab}' `
@@ -1124,6 +1124,7 @@ exports.sql = async (req, res) => {
       break;
 
     case 'GENMODEL':
+      console.log('GENMODEL', nom_tab)
       opciones.mapToModel = true
 
       genModel(dialect, nom_tab, db, dir_emp)
@@ -1145,19 +1146,17 @@ exports.sql = async (req, res) => {
       break;
     //*****************
     case 'GENMODELS':
-
+      opciones.mapToModel = true
       ins_sql = "select nom_tab from vi_schema where tip_obj='MODEL' group by nom_tab"
 
       console.log('<========= GENMODELS ===>', ins_sql)
-
-      db.sequelize.query(ins_sql) // genera query
-        .then(async data => {
-          let swEnd = false
-          var error = ''
+      db.sequelize.query(ins_sql, opciones)
+        .then(data => {
+          console.log('<========= GENMODELS data ===>', data[0])
           for (let ren = 0; ren < data[0].length; ren++) { // genera tantas vistas como sea posible
             const nom_tab = data[0][ren].nom_tab;
-            console.log('<========= Generara sequelize Model ===>', query, '<=====')
-            await genModel(dialect, nom_tab, db, dir_emp)
+            console.log('<========= Generara sequelize Model ===>',nom_tab)
+            genModel(dialect, nom_tab, db, dir_emp)
           } // Fin For 
         }).catch(err => {
           console.log('No se pudo ejecutar ==', err)
@@ -1180,45 +1179,45 @@ exports.sql = async (req, res) => {
 //////////////////////////////////////////////////////
 function writeHead(res, men_err, error) {
 
-  console.error('Sequelize error ====>',error)
- 
-  if (error.message)  
-     men_err=men_err+': '+error.message
+  console.error('Sequelize error ====>', error)
+  if (error) {
+    if (error.message)
+      men_err = men_err + ': ' + error.message
 
-    if(error[0])
-      console.log('======<error[0] array >====== ',error[0])
+    if (error[0])
+      console.log('======<error[0] array >====== ', error[0])
 
-  /*
-  for (const com in error){
-    console.log('===============< arreglo>',com,typeof error[com].isArray ) 
-    if (typeof error[com].isArray==='undefined' &&  error[com][0])
-       console.log('======<error com array >====== ',com,error[com][0])
-      for (const comSeq in error[com])
-        if (typeof error[com][comSeq]!='string' && error[com][comSeq][0] )
-           console.log('======<com array>======> ',comSeq,error[com][comSeq][0])
-
-
-  }
-  */
-  /*message
-  const errObj = {};
-  error.errors.map( er => {
-     errObj[er.path] = er.message;
-  })
-  console.log('errObj Sequelize errores',errObj);
-  */
-
-
-  if (error && error.errors) {
- //   console.error('Sequelize error.errros ====>', error.errors)
-
-    for (let i = 0; i < error.errors.length; i++) {
-      console.error('Sequelize errores ====>>>', error.errors[i].message, '<<<========')
-      men_err = men_err + ',' + error.errors[i].message
-    }
-
-  }
+    /*
+    for (const com in error){
+      console.log('===============< arreglo>',com,typeof error[com].isArray ) 
+      if (typeof error[com].isArray==='undefined' &&  error[com][0])
+         console.log('======<error com array >====== ',com,error[com][0])
+        for (const comSeq in error[com])
+          if (typeof error[com][comSeq]!='string' && error[com][comSeq][0] )
+             console.log('======<com array>======> ',comSeq,error[com][comSeq][0])
   
+  
+    }
+    */
+    /*message
+    const errObj = {};
+    error.errors.map( er => {
+       errObj[er.path] = er.message;
+    })
+    console.log('errObj Sequelize errores',errObj);
+    */
+
+
+    if (error.errors) {
+      //   console.error('Sequelize error.errros ====>', error.errors)
+
+      for (let i = 0; i < error.errors.length; i++) {
+        console.error('Sequelize errores ====>>>', error.errors[i].message, '<<<========')
+        men_err = men_err + ',' + error.errors[i].message
+      }
+
+    }
+  }
   res.writeHead(400, men_err, { 'Content-Type': 'text/plain' });
   res.send();
 }
@@ -1229,12 +1228,13 @@ function writeHead(res, men_err, error) {
 
 async function genModel(dialect, nom_tab, db, dir_emp) {
 
-  console.log('GENERA MODELO ')
   try {
     if (dialect == 'postgres')
       ins_sql = `select F_gen_modelo(nom_ind) as query,nom_ind from man_comeind where lower(nom_tab)=lower('${nom_tab}') and num_ind=1 `
     else
       ins_sql = `select dbo.F_gen_modelo(nom_ind) as query,nom_ind from man_comeind where lower(nom_tab)=lower('${nom_tab}') and num_ind=1 `
+
+    console.log('GENERA MODELO ', ins_sql)
 
     db.sequelize.query(ins_sql)
       .then(data => {
