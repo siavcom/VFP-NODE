@@ -15,5 +15,7 @@ module.exports = {
     timestamps: false,
     createdAt: false,
     updatedAt: false
-  }
+  },
+  jasperServer: "http://176.16.200.20:3010", // JasperServer con todo y el puerto
+ 
 };

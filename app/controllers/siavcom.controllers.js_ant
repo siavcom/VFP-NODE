@@ -5,7 +5,6 @@
 
 //const dbConfig = require("../config/db.config.js");
 
-// npm install requestify  
 
 /////////////////////// Fernando Cuadras //////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////
@@ -33,7 +32,7 @@ exports.login = (req, res) => {
 
   const obj_json = JSON.parse(req.query.json)
   console.log('json de conexion====>>>>>', obj_json)
-  const fec_act = new Date().toISOString().slice(0, 10); //  Fecha actual del servidor de node
+  const fec_act = new Date().toISOString().substr(0, 10); //  Fecha actual del servidor de node
 
   const nom_emp = obj_json.nom_emp  // Nemonico de empresa
   const user = obj_json.user //req.body.user;
@@ -72,7 +71,7 @@ console.log(`Inicializo sync`);
 app/empresas/Demo/db.config.js
   */         //app/empresas/Demo/models/come
   //console.log("Current working directory  : " + process.cwd());
-  // Generamps el path a la empresa en BackEnd 
+
   var dir_emp = process.cwd() + '/app/empresas/' + nom_emp // directorio de empresas 
 
   options = require(dir_emp + '/db.config.js')
@@ -149,8 +148,7 @@ app/empresas/Demo/db.config.js
         empresa: nom_emp,
         db: db,
         dir_emp: dir_emp,
-        dialect: options.dialect,  // viene del archivo de confifuracion
-        jasperServer: options.jasperServer
+        dialect: options.dialect
       }
 
       // module.exports.conexion 
@@ -176,23 +174,12 @@ app/empresas/Demo/db.config.js
 
 // comienzan los requerimientos a la base de datos
 exports.sql = async (req, res) => {
-  //try  {
   // const conexion=this.conexion; 
   //console.log('Conexion Sql =====>', conexion)
-  if (!req || !req.body || !req.body.id_con) {
-    res.writeHead(408, 'No hay conexion o expiro el tiempo de conexion', { 'Content-Type': 'text/plain' });
-    res.send();
-    return;
-
-  }
 
 
   const { id_con } = req.body; // Id de conexion   es lo mismo id_con=req.body.id_con
 
-  
-  //const jrxml = req.body.jrxml?req.body.jrxml:''
-  //const jasperServer =conexion[id_con].jasperServer? conexion[id_con].jasperServer + '/json':''
-  
 
   //{googggle, xcos, ...resultado} excluye objetos y en resultado que el objeto resultante
 
@@ -220,10 +207,6 @@ exports.sql = async (req, res) => {
   const db = conexion[id_con].db // asignamos el objeto de base de datos
   const dir_emp = conexion[id_con].dir_emp
   const dialect = conexion[id_con].dialect
-  
-  const jrxml = req.body.jrxml?req.body.jrxml:''
-  const jasperServer =conexion[id_con].jasperServer? conexion[id_con].jasperServer + '/json':''
-  
 
   //console.log('Base de datos',db)
   // console.log('db a utilizar=====>',db)
@@ -965,7 +948,113 @@ exports.sql = async (req, res) => {
       break
 
 
+    /*
+    ins_sql = `select F_gen_tabla('${options.dialect}','${nom_tab}') as query`
+    var query = ''
+    db.sequelize.query(ins_sql) // genera query
+      .then(data => {
+        query = data[0][0].query 
+        console.log('=================================================')
+        console.log('genera query======> ',query)
 
+        console.log('=================================================')
+
+        db.sequelize.query(query) // ejecuto query
+          .then(data => {
+            console.log('<=========TABLA GENERADA =======>', data)
+            ins_sql = `select F_gen_vista_man('${options.dialect}','${nom_tab}') as query `
+            db.sequelize.query(ins_sql)
+              .then(data => {
+                query = data[0][0].query
+                db.sequelize.query(query)
+                  .then(data => {
+                    console.log('<=========VISTA DE MTO GENERADA =======>', data)
+                    ins_sql = `select F_gen_trigger_fun('${options.dialect}','${nom_tab}') as query`
+                    db.sequelize.query(ins_sql)
+                      .then(data => {
+                        console.log('<========= SCRIPT FUNCION DE MTO GENERADA =======>', data)
+                        query = data[0][0].query
+                        db.sequelize.query(query)
+                          .then(data => {
+                            console.log('<========= FUNCION DE MTO GENERADA =======>', data)
+                            ins_sql = `select F_gen_trigger_man('${options.dialect}','${nom_tab}') as query`
+                            db.sequelize.query(ins_sql)
+                              .then(data => {
+                                console.log('<========= SCRIPT trigger DE MTO GENERADA =======>', data)
+                                query = data[0][0].query
+                                db.sequelize.query(query)
+                                  .then(async data => {
+                                    let result = ''
+                                    console.log('<=========TRIGGER GENERADO =======>', data)
+
+                                    //const promesa = genModel(nom_tab, db, dir_emp)
+
+                                    genModel(nom_tab, db, dir_emp)
+                                      .then((data) => {
+
+                                        if (data == 'Ok') {
+                                          res.send('Se genero tabla ' + nom_tab);
+                                        }
+                                        else {
+                                          res.writeHead(400, "SQL ERROR " + res, { 'Content-Type': 'text/plain' });
+                                          res.send();
+                                        }
+                                      }) //  Fin promesa
+                                      .catch(err => {
+                                        console.log('No se pudo generar MODEL ', err)
+                                        res.writeHead(400, "NODE ERROR :" + err, { 'Content-Type': 'text/plain' });
+                                        res.send();
+                                      });
+
+
+
+                                  }) // trigger generado
+                              }) // trigger de mto generado
+
+                              .catch(err => {
+                                console.log('No se pudo ejecutar ==', err)
+                                res.writeHead(400, "query :" + ins_sql + ' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
+                                res.send();
+                              });
+                          })
+                          .catch(err => {
+                            console.log('No se pudo ejecutar ==', err)
+                            res.writeHead(400, "query :" + ins_sql + ' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
+                            res.send();
+                          });
+                      })
+                      .catch(err => {
+                        console.log('No se pudo ejecutar ==', err)
+                        res.writeHead(400, "query :" + ins_sql + ' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
+                        res.send();
+                      });
+                  })
+                  .catch(err => {
+                    console.log('No se pudo ejecutar ==', err)
+                    res.writeHead(400, "query :" + ins_sql + ' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
+                    res.send();
+                  });
+              })
+              .catch(err => {
+                console.log('No se pudo ejecutar ==', err)
+                res.writeHead(400, "query :" + ins_sql + ' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
+                res.send();
+              })
+          })
+          .catch(err => {
+            console.log('No se pudo ejecutar ==', err)
+            res.writeHead(400, "query :" + ins_sql + ' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
+            res.send();
+          })
+      })
+      .catch(err => {
+        console.log('No se pudo ejecutar ==', err)
+        res.writeHead(400, "query :" + ins_sql + ' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
+        res.send();
+      })
+
+    break;
+   */
     case 'GENINDICES':
 
       opciones.mapToModel = true
@@ -1066,7 +1155,7 @@ exports.sql = async (req, res) => {
           console.log('<========= GENMODELS data ===>', data[0])
           for (let ren = 0; ren < data[0].length; ren++) { // genera tantas vistas como sea posible
             const nom_tab = data[0][ren].nom_tab;
-            console.log('<========= Generara sequelize Model ===>', nom_tab)
+            console.log('<========= Generara sequelize Model ===>',nom_tab)
             genModel(dialect, nom_tab, db, dir_emp)
           } // Fin For 
         }).catch(err => {
@@ -1075,56 +1164,8 @@ exports.sql = async (req, res) => {
         });
       break
 
-    case 'JASPERREPORT':
-      console.log('JASPERREPORT', ins_sql)
-      const axios = require('axios')
-      console.log('JASPERREPORT ', jasperServer)
-      opciones.mapToModel = true
-      const data = {
-        json: {},
-        format: 'pdf',
-        jrxml: jrxml,
-      }
 
-      db.sequelize.query(ins_sql, opciones)
-        .then(result => {
-          console.log('<=========query resultado===>', result[0])
-          if (result[0].length == 0) {  // no hay datos
-            res.send('No data for report')
-            return
-          }
-
-          data.json = result[0]  // aumentamos el resultado 
-          console.log('JASPERREPORT llama Axios ', data)
-          json = JSON.stringify(data)
-          axios.get(jasperServer + '?json=' + json,{ responseType: 'arraybuffer' })
-
-
-            //axios.get(jasperServer, data, {
-            //  headers: { 'Content-type': 'application/json' }
-            //})
-            .then(result => {
-              console.log('JASPER con exito', result.data)
-              res.send(result.data)
-              return
-            })
-            .catch(err => {
-              console.log('Jasper Error =====',err.response.statusText)
-              const men_err=err.response.statusText
-              writeHead(res,men_err);
-              return
-            })
-
-        })
-        .catch(err => {
-          console.log('No se pudo ejecutar ==', err)
-          writeHead(res,'JasperReport ' + ins_sql);
-          return
-        });
-
-
-
-      break;
+    //  *******************
 
     default:
     // code block
