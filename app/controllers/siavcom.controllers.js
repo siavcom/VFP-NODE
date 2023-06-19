@@ -29,6 +29,15 @@ const conexion = {}
 
 
 
+// Override timezone formatting for MSSQL
+/*
+Sequelize.DATE.prototype._stringify = function _stringify(date, options) {
+  return this._applyTimezone(date, options).format('YYYY-MM-DD HH:mm:ss.SSS');
+};
+*/
+
+
+
 exports.login = (req, res) => {
 
   const obj_json = JSON.parse(req.query.json)
@@ -124,8 +133,10 @@ app/empresas/Demo/db.config.js
           .forEach(file => {
             //            const model = require(dir_emp + sistemas[i] + '/' + file)(sequelize, Sequelize.DataTypes);
             const model = require(dir_emp + sistemas[i] + '/' + file)(sequelize, DataTypes);
+            model.removeAttribute('id'); 
 
             db[model.name] = model;
+
             console.log('Siavcom controllers Sequalize Model===> ', model)
           });
       }
@@ -189,10 +200,10 @@ exports.sql = async (req, res) => {
 
   const { id_con } = req.body; // Id de conexion   es lo mismo id_con=req.body.id_con
 
-  
+
   //const jrxml = req.body.jrxml?req.body.jrxml:''
   //const jasperServer =conexion[id_con].jasperServer? conexion[id_con].jasperServer + '/json':''
-  
+
 
   //{googggle, xcos, ...resultado} excluye objetos y en resultado que el objeto resultante
 
@@ -220,10 +231,10 @@ exports.sql = async (req, res) => {
   const db = conexion[id_con].db // asignamos el objeto de base de datos
   const dir_emp = conexion[id_con].dir_emp
   const dialect = conexion[id_con].dialect
-  
-  const jrxml = req.body.jrxml?req.body.jrxml:''
-  const jasperServer =conexion[id_con].jasperServer? conexion[id_con].jasperServer + '/json':''
-  
+
+  const jrxml = req.body.jrxml ? req.body.jrxml : ''
+  const jasperServer = conexion[id_con].jasperServer ? conexion[id_con].jasperServer + '/json' : ''
+
 
   //console.log('Base de datos',db)
   // console.log('db a utilizar=====>',db)
@@ -270,6 +281,8 @@ exports.sql = async (req, res) => {
 
 
   //console.log(llamada);
+
+
 
 
   tip_lla = tip_lla.toUpperCase()
@@ -396,12 +409,12 @@ exports.sql = async (req, res) => {
                 break;
               case 'tim':
                 tip_campo = 'TIME'
-                val_campo = "'1900-01-01 00:00:00'"
+                val_campo = "'19000101 00:00:00'"
 
                 break;
               case 'dat':
                 tip_campo = 'DATE'
-                val_campo = "'1900-01-01'"
+                val_campo = "'19000101'"
 
                 break;
               case 'num':
@@ -586,87 +599,145 @@ exports.sql = async (req, res) => {
 
         return;
       }
+      let campos=''
+      let valores=''
+      const datosEnviar={}
+      datos.key_pri = 0
+      let coma=''
+      for (campo in datos)
+         if (campo!='key_pri'){
+           datosEnviar[campo]=datos[campo]
+           campos=campos+coma+campo
+           let comillas=''
+           
+           if (typeof datos[campo] == 'string')
+              comillas="'"
+
+           const valor=`${comillas}${datos[campo]}${comillas}`
+
+
+           valores=valores+coma+`${valor}`
+           coma=','
+         }
+ 
+      let insSql='INSERT INTO  '+db[nom_tab].tableName+' ('+campos+ ') VALUES ('+valores+')'
+      console.log('INSERT SQL =====>>>',insSql,'DB====>',db[nom_tab].tableName)
+
+      datosEnviar.id=0
+      datosEnviar.key_pri=0
+
+      console.log('INSERT  =====>>>', nom_tab, datosEnviar)
+
       //console.log('INSERT datos ========>', datos,condicion)
-      db.sequelize.transaction({ autocommit: false })
-        .then(transaction => {
-          db[nom_tab].create(datos, {
-            returning: false,
-            plain: false,
-            transaction: transaction,
-            validate: true
-          })
-            .then((result) => {
-              // Obtiene el timestamp y key_pri actual
-              transaction.commit();
+      // db.sequelize.transaction({ autocommit: false })
+      //  .then(transaction => {
 
-              console.log('================ datos insertados  condicion >>>>>', result, condicion.where)
-              db[nom_tab].findAll(
-
-                {
-                  attributes: ['timestamp', 'key_pri'],
-                  where: condicion.where,
-                  raw: true,
-                })
-
-                // db[nom_tab].findAll(condicion)
-                .then(data => {
-                  console.log('======== datos insertados leidos =======', data[0]);
-                  // envia el timestamp
-                  res.send(data[0]);
-                })
-                .catch(err => {     // Error al leer el TimeStamp
-                  console.error('Insert commit Error', err)
-                  transaction.rollback();
-                  writeHead(res, err.message)
-
-                });
-              ///////////////////
-              //res.send(data);
-            })
-            .catch(error => {
-              let men_err = 'Insert error ' + nom_tab;//+ err.message
-              transaction.rollback();
-              writeHead(res, men_err, error);
-
-
-            });
+       
+      try {
+        
+       await  db.sequelize.query(insSql)      
+        /*
+        result=await db[nom_tab].create(datosEnviar, {
+          silent:true,
+          returning: false,
+          // plain: false,
+          // transaction: transaction,
+          validate: false,
+          returning:false
         })
-        .catch(err => {     // Error al leer el modelo en  sequelize
-          console.error('Insert transaction Error', err)
-          transaction.rollback();
-          writeHead(res, men_err)
+        
+        */
+        const data=await db[nom_tab].findAll(
+
+          {
+            attributes: ['timestamp', 'key_pri'],
+            where: condicion.where,
+            raw: true,
+          })
+
+          // db[nom_tab].findAll(condicion)
+            console.log('======== datos insertados leidos =======', data[0]);
+            // envia el timestamp
+            res.send(data[0]);
+
+      } catch(error){
+
+        console.error('Insert  Error', error)
+        let men_err = 'Insert error ' + error
+        console.error('Insert  Error', men_err)// transaction.rollback();
+        writeHead(res, men_err, error);
+
+
+
+      }
+      /*
+      break;
+      db[nom_tab].create(datosEnviar, {
+        returning: false,
+        plain: false,
+        // transaction: transaction,
+        validate: false
+      })
+        .then((result) => {
+          // Obtiene el timestamp y key_pri actual
+          // transaction.commit();
+
+          console.log('================ datos insertados  condicion >>>>>', result, condicion.where)
+          db[nom_tab].findAll(
+
+            {
+              attributes: ['timestamp', 'key_pri'],
+              where: condicion.where,
+              raw: true,
+            })
+
+            // db[nom_tab].findAll(condicion)
+            .then(data => {
+              console.log('======== datos insertados leidos =======', data[0]);
+              // envia el timestamp
+              res.send(data[0]);
+            })
+ 
+        })
+        .catch(error => {
+          console.error('Insert  Error', error)
+          let men_err = 'Insert error ' + error
+          console.error('Insert  Error', men_err)// transaction.rollback();
+          writeHead(res, men_err, error);
+
+
         });
-
-
+      */
       break;
 
     case 'UPDATE':
 
       if (!datos) {
         writeHead(res, "No DATA to update")
-
         return;
       }
 
       if (datos.key_pri == 0) {
         writeHead(res, "Can't not update key_pri=0")
-
+        return
       }
+
+      console.log('UPDATE  =====>>>', nom_tab, datos)
 
       const key_pri = datos.key_pri;
 
       delete datos['key_pri']   // borramos el key pri de los datos a actualizar
       delete datos['val_vista'];
 
-
-      if (typeof datos.timestamp != 'number') {  // No es Postgres
-        // MSSQL buffer
+      // No es Postgres . Cambiamos el TimeStamp to Buffer para comparar actualizacion
+      if (typeof datos.timestamp != 'number') {
         const buffer = datos.timestamp
         datos.timestamp = Buffer.from(buffer);
 
         // base64 
         //Buffer.from(binaryPhoto).toString('base64')
       }
+
 
       ///////////////   TRANSACTION ////////////
       /*
@@ -675,6 +746,8 @@ exports.sql = async (req, res) => {
           console.log('========== Begin trans datos a actualizar =======', nom_tab, key_pri, datos);
 
        */
+
+
       db[nom_tab].update(datos, {
         where: { key_pri: key_pri },
         returning: false,
@@ -683,7 +756,7 @@ exports.sql = async (req, res) => {
       })
         // db[nom_vis].upsert(dat_act, condicion)
         .then((result) => {
-          console.log('update respuesta  =====>>>', result)
+          console.log('UPDATE respuesta  =====>>>', result)
           // transaction.commit()
           // Obtiene el timestamp actual
           db[nom_tab].findAll(
@@ -693,13 +766,26 @@ exports.sql = async (req, res) => {
               raw: true,
             })
             .then(datos => {  // envia el timestamp     aqui voy checar demas findAll
-              console.log('==========Dato actualizado datos=======>>>>', datos[0].timestamp)
-              res.send(datos[0]);
+              /*
+              if (typeof datos[0].timestamp != 'number') {  // No es Postgres
+                // MSSQL buffer
+                console.log('UPDATE timestamp=>>',datos[0].timestamp)
+                const buffer = datos[0].timestamp
+                datos[0].timestamp = Buffer.from(buffer);
+        
+                // base64 
+                //Buffer.from(binaryPhoto).toString('base64')
+              }
+              */
+              console.log('UPDATE Datos actualizados =======>>>>', datos[0])
+
+
+              res.send(datos[0])
 
             })
             .catch(err => {     // Error al leer el TimeStamp
               writeHead(res, 'Update error', err)
-              console.error('Update Commit Error', err)
+              console.error('Update Error', err)
               // transaction.rollback();
 
             });
@@ -895,7 +981,7 @@ exports.sql = async (req, res) => {
 
       db.sequelize.query(ins_sql, opciones)
         .then(data => {
-          console.log('<=========query resultado===>', data[0])
+          // console.log('<=========query resultado===>', data[0])
           res.send(data[0]);
         })
         .catch(err => {
@@ -916,33 +1002,41 @@ exports.sql = async (req, res) => {
         ins_sql = `exec P_gen_todo '${dialect}','${nom_tab}' `
 
       console.log('<========= P_gen_todo ===>', ins_sql)
-
+      var query = ''
+      var error = ''
+      var swError = false
       db.sequelize.query(ins_sql) // genera query
         .then(async data => {
           //let ren = 0
 
           let swEnd = false
-          var error = ''
+
+
           for (let ren = 0; ren < data[0].length; ren++) { // genera tantas vistas como sea posible
-            const query = data[0][ren].query;
-
-
+            query = data[0][ren].query;
 
             console.log('<========= Ejecutara query===>', query, '<=====')
             // do {
-
+            swEnd = true
+            swError = true
             await db.sequelize.query(query)
               .then(data => {
                 console.log('<========= Query ejecutado correctamente=======>', data)
-                // swEnd = true
+                swEnd = false
+                swError = false
 
               })
-              .catch(que_err => {
-                swEnd = true
-                error = query + ', ' + que_err
-                console.log('No se pudo ejecutar query =====> ', error)
-
-              })
+            /*
+            .catch(que_err => {
+              swEnd = true
+              swError=true
+              error = query + ', ' + que_err
+              console.log('Error al ejecutar el query =====> ', error)
+              writeHead(res, "Error al ejecutar el query :" +query,'')
+             
+              return
+            })
+            */
             if (swEnd) break
             // } while (!swEnd)
           } // Fin For 
@@ -951,14 +1045,22 @@ exports.sql = async (req, res) => {
             console.log('Genero Todo con exito. Generará modelo===>', nom_tab)
             await genModel(dialect, nom_tab, db, dir_emp)
           }
-          else { // Hay error
-            writeHead(res, "query :" + error);
-            return
-          }
+          //         else { // Hay error
+          //           writeHead(res, "query :" + error,'');
+          //           return
+          //         }
         }).
         catch(err => {
-          console.log('Error genera todo ==>>', err)
-          writeHead(res, "query :" + ins_sql + err);
+          console.log('Genera todo query :' + ins_sql)
+          //        if (!swError) {
+
+          console.log('Error al ejecutar el query =====> ', query)
+          //            writeHead(res, "Error al ejecutar el query :" + query, err)
+          writeHead(res, "", err)
+
+          //      }
+
+          // writeHead(res, "query :" + ins_sql + err);
           return
         })
 
@@ -1097,7 +1199,7 @@ exports.sql = async (req, res) => {
           data.json = result[0]  // aumentamos el resultado 
           console.log('JASPERREPORT llama Axios ', data)
           json = JSON.stringify(data)
-          axios.get(jasperServer + '?json=' + json,{ responseType: 'arraybuffer' })
+          axios.get(jasperServer + '?json=' + json, { responseType: 'arraybuffer' })
 
 
             //axios.get(jasperServer, data, {
@@ -1109,16 +1211,16 @@ exports.sql = async (req, res) => {
               return
             })
             .catch(err => {
-              console.log('Jasper Error =====',err.response.statusText)
-              const men_err=err.response.statusText
-              writeHead(res,men_err);
+              console.log('Jasper Error =====', err.response.statusText)
+              const men_err = err.response.statusText
+              writeHead(res, men_err);
               return
             })
 
         })
         .catch(err => {
           console.log('No se pudo ejecutar ==', err)
-          writeHead(res,'JasperReport ' + ins_sql);
+          writeHead(res, 'JasperReport ' + ins_sql);
           return
         });
 
@@ -1136,25 +1238,31 @@ exports.sql = async (req, res) => {
 //////////////////////////////////////////////////////
 /////////////////  Funciones /////////////////////////
 //////////////////////////////////////////////////////
-function writeHead(res, men_err, error) {
+async function writeHead(res, men_err, error) {
 
-  console.error('Sequelize error ====>', error)
-  if (error) {
-    if (error.message)
+  //if (typeof error == 'string') {
+    if (error && error.message)
       men_err = men_err + ': ' + error.message
 
-    if (error[0])
+    if (error && error[0])
       console.log('======<error[0] array >====== ', error[0])
+
+    //if (error.original) men_err=men_err+error.original
+
+    
+    if (error.sql) men_err=men_err+' at '+error.sql
+    if (error.original) men_err=men_err+' at '+error.original
 
     /*
     for (const com in error){
-      console.log('===============< arreglo>',com,typeof error[com].isArray ) 
+      console.log('=========<Error  Comonente>====',com,error[com] ) 
+     
       if (typeof error[com].isArray==='undefined' &&  error[com][0])
          console.log('======<error com array >====== ',com,error[com][0])
         for (const comSeq in error[com])
           if (typeof error[com][comSeq]!='string' && error[com][comSeq][0] )
-             console.log('======<com array>======> ',comSeq,error[com][comSeq][0])
-  
+             console.log('======<error com array>======> ',comSeq,error[com][comSeq][0])
+      
   
     }
     */
@@ -1176,8 +1284,16 @@ function writeHead(res, men_err, error) {
       }
 
     }
-  }
-  res.writeHead(400, men_err, { 'Content-Type': 'text/plain' });
+  //}
+  
+  var message = Buffer.from(men_err, 'utf-8').toString();
+  console.error('BackEnd error message ==========>', message, '<=============')
+
+  //  res.writeHead(400, message, { 'Content-Type': 'text/plain' });
+
+  res.writeHead(400, message);
+
+
   res.send();
 }
 
