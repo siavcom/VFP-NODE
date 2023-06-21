@@ -85,7 +85,7 @@ app/empresas/Demo/db.config.js
   var dir_emp = process.cwd() + '/app/empresas/' + nom_emp // directorio de empresas 
 
   options = require(dir_emp + '/db.config.js')
-  console.log('Lee empresa options', options)
+ // console.log('Lee empresa options', options)
   //console.log('Lee archivo de configuracion====>>>',options)
   if (!options) {
     res.writeHead(400, 'No existe empresa', { 'Content-Type': 'text/plain' });
@@ -133,11 +133,11 @@ app/empresas/Demo/db.config.js
           .forEach(file => {
             //            const model = require(dir_emp + sistemas[i] + '/' + file)(sequelize, Sequelize.DataTypes);
             const model = require(dir_emp + sistemas[i] + '/' + file)(sequelize, DataTypes);
-            model.removeAttribute('id'); 
+            //model.removeAttribute('id'); 
 
             db[model.name] = model;
 
-            console.log('Siavcom controllers Sequalize Model===> ', model)
+            //console.log('Siavcom controllers Sequalize Model===> ', model)
           });
       }
       Object.keys(db).forEach(modelName => {
@@ -160,7 +160,7 @@ app/empresas/Demo/db.config.js
         empresa: nom_emp,
         db: db,
         dir_emp: dir_emp,
-        dialect: options.dialect,  // viene del archivo de confifuracion
+        dialect: options.dialect,  // viene del archivo de configuracion
         jasperServer: options.jasperServer
       }
 
@@ -173,7 +173,7 @@ app/empresas/Demo/db.config.js
 
       console.log('Se genero la conexion =', name)
 
-      res.json({ id: name })
+      res.json({ id: name ,dialect:options.dialect})
 
     })
     .catch(err => {
@@ -599,32 +599,32 @@ exports.sql = async (req, res) => {
 
         return;
       }
-      let campos=''
-      let valores=''
-      const datosEnviar={}
+      let campos = ''
+      let valores = ''
+      const datosEnviar = {}
       datos.key_pri = 0
-      let coma=''
-      for (campo in datos)
-         if (campo!='key_pri'){
-           datosEnviar[campo]=datos[campo]
-           campos=campos+coma+campo
-           let comillas=''
-           
-           if (typeof datos[campo] == 'string')
-              comillas="'"
+      let coma = ''
+      for (const campo in datos)
+        if (campo != 'key_pri') {
+          datosEnviar[campo] = datos[campo]
+          campos = campos + coma + campo
+          let comillas = ''
 
-           const valor=`${comillas}${datos[campo]}${comillas}`
+          if (typeof datos[campo] == 'string')
+            comillas = "'"
+
+          const valor = `${comillas}${datos[campo]}${comillas}`
 
 
-           valores=valores+coma+`${valor}`
-           coma=','
-         }
- 
-      let insSql='INSERT INTO  '+db[nom_tab].tableName+' ('+campos+ ') VALUES ('+valores+')'
-      console.log('INSERT SQL =====>>>',insSql,'DB====>',db[nom_tab].tableName)
+          valores = valores + coma + `${valor}`
+          coma = ','
+        }
 
-      datosEnviar.id=0
-      datosEnviar.key_pri=0
+      let insSql = 'INSERT INTO  ' + db[nom_tab].tableName + ' (' + campos + ') VALUES (' + valores + ')'
+      console.log('INSERT SQL =====>>>', insSql, 'DB====>', db[nom_tab].tableName)
+
+      datosEnviar.id = 0
+      datosEnviar.key_pri = 0
 
       console.log('INSERT  =====>>>', nom_tab, datosEnviar)
 
@@ -632,10 +632,10 @@ exports.sql = async (req, res) => {
       // db.sequelize.transaction({ autocommit: false })
       //  .then(transaction => {
 
-       
+
       try {
-        
-       await  db.sequelize.query(insSql)      
+
+        await db.sequelize.query(insSql)
         /*
         result=await db[nom_tab].create(datosEnviar, {
           silent:true,
@@ -647,7 +647,7 @@ exports.sql = async (req, res) => {
         })
         
         */
-        const data=await db[nom_tab].findAll(
+        const data = await db[nom_tab].findAll(
 
           {
             attributes: ['timestamp', 'key_pri'],
@@ -655,12 +655,12 @@ exports.sql = async (req, res) => {
             raw: true,
           })
 
-          // db[nom_tab].findAll(condicion)
-            console.log('======== datos insertados leidos =======', data[0]);
-            // envia el timestamp
-            res.send(data[0]);
+        // db[nom_tab].findAll(condicion)
+        console.log('======== datos insertados leidos =======', data[0]);
+        // envia el timestamp
+        res.send(data[0]);
 
-      } catch(error){
+      } catch (error) {
 
         console.error('Insert  Error', error)
         let men_err = 'Insert error ' + error
@@ -722,14 +722,26 @@ exports.sql = async (req, res) => {
         return
       }
 
-      console.log('UPDATE  =====>>>', nom_tab, datos)
 
       const key_pri = datos.key_pri;
 
       delete datos['key_pri']   // borramos el key pri de los datos a actualizar
       delete datos['val_vista'];
+      
+      for (const campo in datos) {  // Checamos todos los campos buffer
 
+        console.log(' campo ===>>>', campo,datos[campo],Buffer.isBuffer(datos[campo]))
+       //campo!='timestamp' &&//Buffer.isBuffer(datos[campo])
+        if (datos[campo].type && datos[campo].type=='Buffer')  {
+          console.log('UPDATE campo buffer ===>>>', campo)
+          const buffer = datos[campo]
+          datos[campo] = Buffer.from(buffer)
+        }
+      }
+      
       // No es Postgres . Cambiamos el TimeStamp to Buffer para comparar actualizacion
+
+      /*
       if (typeof datos.timestamp != 'number') {
         const buffer = datos.timestamp
         datos.timestamp = Buffer.from(buffer);
@@ -737,7 +749,7 @@ exports.sql = async (req, res) => {
         // base64 
         //Buffer.from(binaryPhoto).toString('base64')
       }
-
+      */
 
       ///////////////   TRANSACTION ////////////
       /*
@@ -756,7 +768,7 @@ exports.sql = async (req, res) => {
       })
         // db[nom_vis].upsert(dat_act, condicion)
         .then((result) => {
-          console.log('UPDATE respuesta  =====>>>', result)
+          console.log('UPDATE respuesta  =====>>>', result,result[0])
           // transaction.commit()
           // Obtiene el timestamp actual
           db[nom_tab].findAll(
@@ -967,7 +979,7 @@ exports.sql = async (req, res) => {
         })
         .catch(err => {
           console.log('No se pudo ejecutar ==', err)
-          writeHead(res, "SQL ERROR " + ins_sql);
+          writeHead(res, " ERROR " + ins_sql);
         });
 
       break;
@@ -986,7 +998,7 @@ exports.sql = async (req, res) => {
         })
         .catch(err => {
           console.log('No se pudo ejecutar ==', err)
-          writeHead(res, "SQL ERROR " + ins_sql);
+          writeHead(res, "ERROR ", err);
         });
 
       break;
@@ -1241,31 +1253,39 @@ exports.sql = async (req, res) => {
 async function writeHead(res, men_err, error) {
 
   //if (typeof error == 'string') {
-    if (error && error.message)
+  if (error) {
+    for (const com in error)
+      console.log('=========<Error Componente>====', com, 'error=', error[com])
+    /*
+  for (const com in error){
+    console.log('=========<Error Componente>====',com,'error=',error[com] ) 
+   
+    if (typeof error[com].isArray==='undefined' &&  error[com][0])
+       console.log('======<error com array >====== ',com,error[com][0])
+      for (const comSeq in error[com])
+        if (typeof error[com][comSeq]!='string' && error[com][comSeq][0] )
+           console.log('======<error com array>======> ',comSeq,error[com][comSeq][0])
+  }
+  */
+    if (error.message) {
       men_err = men_err + ': ' + error.message
 
-    if (error && error[0])
-      console.log('======<error[0] array >====== ', error[0])
-
-    //if (error.original) men_err=men_err+error.original
-
-    
-    if (error.sql) men_err=men_err+' at '+error.sql
-    if (error.original) men_err=men_err+' at '+error.original
-
-    /*
-    for (const com in error){
-      console.log('=========<Error  Comonente>====',com,error[com] ) 
-     
-      if (typeof error[com].isArray==='undefined' &&  error[com][0])
-         console.log('======<error com array >====== ',com,error[com][0])
-        for (const comSeq in error[com])
-          if (typeof error[com][comSeq]!='string' && error[com][comSeq][0] )
-             console.log('======<error com array>======> ',comSeq,error[com][comSeq][0])
-      
-  
+      if (error.sql) men_err = men_err + ' in ' + error.sql
     }
-    */
+
+    if (error.original) {
+       const original=error.original
+      if (original.errors) {
+        for (let i = 0; i < original.errors.length; i++) {
+          console.error('Agregate.errors ===>>>', original.errors[i], '<<<========')
+          men_err = men_err + ':' + original.errors[i]
+        }
+
+
+      }
+    }
+
+
     /*message
     const errObj = {};
     error.errors.map( er => {
@@ -1276,16 +1296,17 @@ async function writeHead(res, men_err, error) {
 
 
     if (error.errors) {
-      //   console.error('Sequelize error.errros ====>', error.errors)
+
 
       for (let i = 0; i < error.errors.length; i++) {
-        console.error('Sequelize errores ====>>>', error.errors[i].message, '<<<========')
-        men_err = men_err + ',' + error.errors[i].message
+        console.error('error.errors ===>>>', error.errors[i], error.errors[i].message, '<<<========')
+        men_err = men_err + ':' + error.errors[i].message
       }
 
     }
+  }
   //}
-  
+
   var message = Buffer.from(men_err, 'utf-8').toString();
   console.error('BackEnd error message ==========>', message, '<=============')
 
