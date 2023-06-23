@@ -85,7 +85,7 @@ app/empresas/Demo/db.config.js
   var dir_emp = process.cwd() + '/app/empresas/' + nom_emp // directorio de empresas 
 
   options = require(dir_emp + '/db.config.js')
- // console.log('Lee empresa options', options)
+  // console.log('Lee empresa options', options)
   //console.log('Lee archivo de configuracion====>>>',options)
   if (!options) {
     res.writeHead(400, 'No existe empresa', { 'Content-Type': 'text/plain' });
@@ -173,7 +173,7 @@ app/empresas/Demo/db.config.js
 
       console.log('Se genero la conexion =', name)
 
-      res.json({ id: name ,dialect:options.dialect})
+      res.json({ id: name, dialect: options.dialect })
 
     })
     .catch(err => {
@@ -247,6 +247,7 @@ exports.sql = async (req, res) => {
   //const condicion = { where: {} }
   //console.log('condicion.where =',req.body.where)
   condicion.where = req.body.where
+
   //eval('condicion.where ='+req.body.where); // Condicion Where de busqueda
   let nom_vis = ''
   let nom_tab = ''
@@ -604,38 +605,63 @@ exports.sql = async (req, res) => {
       const datosEnviar = {}
       datos.key_pri = 0
       let coma = ''
-      for (const campo in datos)
-        if (campo != 'key_pri') {
-          datosEnviar[campo] = datos[campo]
+     
+      let replacement = ''
+      for (const campo in datos) {
+        //  convirtiendo buffer a enviar
+        if (datos[campo].type && datos[campo].type == 'Buffer') {
+          console.log('UPDATE campo buffer ===>>>', campo)
+          const buffer = datos[campo]
+          datos[campo] = Buffer.from(buffer)
+        }
+
+        datosEnviar[campo] = datos[campo]
+  
+         /* 
           campos = campos + coma + campo
           let comillas = ''
-
           if (typeof datos[campo] == 'string')
             comillas = "'"
 
           const valor = `${comillas}${datos[campo]}${comillas}`
-
-
           valores = valores + coma + `${valor}`
+          */
+
+          replacement = replacement + coma + '$' + campo
+
           coma = ','
-        }
+      }
+      //      let insSql = 'INSERT INTO  ' + db[nom_tab].tableName + ' (' + campos + ') VALUES (?)'
 
-      let insSql = 'INSERT INTO  ' + db[nom_tab].tableName + ' (' + campos + ') VALUES (' + valores + ')'
-      console.log('INSERT SQL =====>>>', insSql, 'DB====>', db[nom_tab].tableName)
+      let insSql = 'INSERT INTO  ' + db[nom_tab].tableName + ' (' + campos + ') VALUES (' + replacement + ')'
 
+
+//      let insSql = 'INSERT INTO  ' + db[nom_tab].tableName + ' (' + campos + ') VALUES (' + valores + ')'
+     
       datosEnviar.id = 0
       datosEnviar.key_pri = 0
+      datosEnviar.timestamp= null
 
-      console.log('INSERT  =====>>>', nom_tab, datosEnviar)
+      //console.log('INSERT  =====>>>', nom_tab,insSql)
 
-      //console.log('INSERT datos ========>', datos,condicion)
       // db.sequelize.transaction({ autocommit: false })
       //  .then(transaction => {
 
 
       try {
+        //await db.sequelize.query(insSql,values)
+        
+         await db.sequelize.query(insSql,{
+           bind: datosEnviar,
+           type:QueryTypes.INSERT,
+           returning:false,
+           }
+         )
+         
 
-        await db.sequelize.query(insSql)
+
+        //await db.sequelize.query(insSql)
+
         /*
         result=await db[nom_tab].create(datosEnviar, {
           silent:true,
@@ -647,6 +673,7 @@ exports.sql = async (req, res) => {
         })
         
         */
+         // obtiene el key_pri y timestamp
         const data = await db[nom_tab].findAll(
 
           {
@@ -656,7 +683,7 @@ exports.sql = async (req, res) => {
           })
 
         // db[nom_tab].findAll(condicion)
-        console.log('======== datos insertados leidos =======', data[0]);
+        console.log('condicion where',condicion.where,'======== datos insertados leidos =======', data[0]);
         // envia el timestamp
         res.send(data[0]);
 
@@ -727,18 +754,16 @@ exports.sql = async (req, res) => {
 
       delete datos['key_pri']   // borramos el key pri de los datos a actualizar
       delete datos['val_vista'];
-      
-      for (const campo in datos) {  // Checamos todos los campos buffer
 
-        console.log(' campo ===>>>', campo,datos[campo],Buffer.isBuffer(datos[campo]))
-       //campo!='timestamp' &&//Buffer.isBuffer(datos[campo])
-        if (datos[campo].type && datos[campo].type=='Buffer')  {
+      for (const campo in datos) {  // Checamos todos los campos buffer
+        //campo!='timestamp' &&//Buffer.isBuffer(datos[campo])
+        if (datos[campo].type && datos[campo].type == 'Buffer') {
           console.log('UPDATE campo buffer ===>>>', campo)
           const buffer = datos[campo]
           datos[campo] = Buffer.from(buffer)
         }
       }
-      
+
       // No es Postgres . Cambiamos el TimeStamp to Buffer para comparar actualizacion
 
       /*
@@ -768,7 +793,7 @@ exports.sql = async (req, res) => {
       })
         // db[nom_vis].upsert(dat_act, condicion)
         .then((result) => {
-          console.log('UPDATE respuesta  =====>>>', result,result[0])
+          console.log('UPDATE respuesta  =====>>>', result, result[0])
           // transaction.commit()
           // Obtiene el timestamp actual
           db[nom_tab].findAll(
@@ -1267,14 +1292,21 @@ async function writeHead(res, men_err, error) {
            console.log('======<error com array>======> ',comSeq,error[com][comSeq][0])
   }
   */
+  if (error.detail) {
+    men_err = men_err + ': ' + error.detail
+  }
+
+
+
     if (error.message) {
       men_err = men_err + ': ' + error.message
 
       if (error.sql) men_err = men_err + ' in ' + error.sql
     }
 
+
     if (error.original) {
-       const original=error.original
+      const original = error.original
       if (original.errors) {
         for (let i = 0; i < original.errors.length; i++) {
           console.error('Agregate.errors ===>>>', original.errors[i], '<<<========')
