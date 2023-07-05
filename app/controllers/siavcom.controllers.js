@@ -172,8 +172,18 @@ app/empresas/Demo/db.config.js
       //   module.export=db // exportamos el ID como nombre de clase
 
       console.log('Se genero la conexion =', name)
+      let ins_sql = ''
+      if (options.dialect == 'postgres')
+        ins_sql = 'select cast(current_timestamp as timestamp(3)) as fec_act'
+      else
+        ins_sql = 'select getdate() as fec_act'
 
-      res.json({ id: name, dialect: options.dialect })
+      let fpo_pge = ''
+      db.sequelize.query(ins_sql)
+        .then(data => { fpo_pge=data[0].fec_act })
+
+
+      res.json({ id: name, dialect: options.dialect,fpo_pge})
 
     })
     .catch(err => {
@@ -283,9 +293,6 @@ exports.sql = async (req, res) => {
 
   //console.log(llamada);
 
-
-
-
   tip_lla = tip_lla.toUpperCase()
 
   switch (tip_lla) {
@@ -376,7 +383,7 @@ exports.sql = async (req, res) => {
             console.log('Nombre del campo,tipo, valor=====>>>', nom_campo, tip_campo, val_defa)
             if (nom_campo == 'timestamp') {
               sw_timestamp = true
-              tip_cam = 'tsp'
+              tip_campo = 'tsp'
             }
             switch
             (tip_campo) {
@@ -424,7 +431,7 @@ exports.sql = async (req, res) => {
 
                 break;
               case 'tsp':  // Timestamp MSSQL
-                tip_campo = 'TBD'
+                tip_campo = 'TEXT' //antes 'TBD'
                 val_campo = null
                 break;
               case 'bol':  // boolean Logico 1=verdadero 0=Falso
@@ -605,7 +612,7 @@ exports.sql = async (req, res) => {
       const datosEnviar = {}
       datos.key_pri = 0
       let coma = ''
-     
+
       let replacement = ''
       for (const campo in datos) {
         //  convirtiendo buffer a enviar
@@ -616,31 +623,30 @@ exports.sql = async (req, res) => {
         }
 
         datosEnviar[campo] = datos[campo]
-  
-         /* 
-          campos = campos + coma + campo
-          let comillas = ''
-          if (typeof datos[campo] == 'string')
-            comillas = "'"
 
-          const valor = `${comillas}${datos[campo]}${comillas}`
-          valores = valores + coma + `${valor}`
-          */
+        campos = campos + coma + campo
+        replacement = replacement + coma + '$' + campo
+        coma = ','
+        /*    Genera valores de campos
+        let comillas = ''
+        if (typeof datos[campo] == 'string')
+          comillas = "'"
 
-          replacement = replacement + coma + '$' + campo
+                  const valor = `${comillas}${datos[campo]}${comillas}`
+                  valores = valores + coma + `${valor}`
+       */
 
-          coma = ','
       }
       //      let insSql = 'INSERT INTO  ' + db[nom_tab].tableName + ' (' + campos + ') VALUES (?)'
 
       let insSql = 'INSERT INTO  ' + db[nom_tab].tableName + ' (' + campos + ') VALUES (' + replacement + ')'
 
 
-//      let insSql = 'INSERT INTO  ' + db[nom_tab].tableName + ' (' + campos + ') VALUES (' + valores + ')'
-     
+      //      let insSql = 'INSERT INTO  ' + db[nom_tab].tableName + ' (' + campos + ') VALUES (' + valores + ')'
+
       datosEnviar.id = 0
       datosEnviar.key_pri = 0
-      datosEnviar.timestamp= null
+      datosEnviar.timestamp = null
 
       //console.log('INSERT  =====>>>', nom_tab,insSql)
 
@@ -650,14 +656,14 @@ exports.sql = async (req, res) => {
 
       try {
         //await db.sequelize.query(insSql,values)
-        
-         await db.sequelize.query(insSql,{
-           bind: datosEnviar,
-           type:QueryTypes.INSERT,
-           returning:false,
-           }
-         )
-         
+
+        await db.sequelize.query(insSql, {
+          bind: datosEnviar,
+          type: QueryTypes.INSERT,
+          returning: false,
+        }
+        )
+
 
 
         //await db.sequelize.query(insSql)
@@ -673,7 +679,7 @@ exports.sql = async (req, res) => {
         })
         
         */
-         // obtiene el key_pri y timestamp
+        // obtiene el key_pri y timestamp
         const data = await db[nom_tab].findAll(
 
           {
@@ -683,7 +689,7 @@ exports.sql = async (req, res) => {
           })
 
         // db[nom_tab].findAll(condicion)
-        console.log('condicion where',condicion.where,'======== datos insertados leidos =======', data[0]);
+        console.log('condicion where', condicion.where, '======== datos insertados leidos =======', data[0]);
         // envia el timestamp
         res.send(data[0]);
 
@@ -924,6 +930,11 @@ exports.sql = async (req, res) => {
               tip_campo = tip_campo.substr(0, 3).toUpperCase()
               console.log('GETDEF tip_camp ====>', tip_campo)
 
+              if (nom_campo == 'timestamp') {
+                sw_timestamp = true
+                tip_campo = 'tsp'
+              }
+
               switch
               (tip_campo) {
                 case 'CHA':
@@ -969,15 +980,15 @@ exports.sql = async (req, res) => {
                   val_campo = 0
 
                   break;
+                case 'tsp':  // Timestamp MSSQL
+                  tip_campo = 'TEXT' //antes 'TBD'
+                  val_campo = null
+                  break;
                 default:
                   tip_campo = 'STRING'
                   val_campo = ''
 
               }
-
-
-
-
               // asignamos los valores a la estructura de la tabla
               est_tabla[nom_campo] = {
 
@@ -1292,9 +1303,9 @@ async function writeHead(res, men_err, error) {
            console.log('======<error com array>======> ',comSeq,error[com][comSeq][0])
   }
   */
-  if (error.detail) {
-    men_err = men_err + ': ' + error.detail
-  }
+    if (error.detail) {
+      men_err = men_err + ': ' + error.detail
+    }
 
 
 
@@ -1313,7 +1324,9 @@ async function writeHead(res, men_err, error) {
           men_err = men_err + ':' + original.errors[i]
         }
 
-
+      }
+      else {
+        men_err = men_err + ':' + original
       }
     }
 
