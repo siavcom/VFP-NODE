@@ -180,10 +180,10 @@ app/empresas/Demo/db.config.js
 
       let fpo_pge = ''
       db.sequelize.query(ins_sql)
-        .then(data => { fpo_pge=data[0].fec_act })
+        .then(data => { fpo_pge = data[0].fec_act })
 
 
-      res.json({ id: name, dialect: options.dialect,fpo_pge})
+      res.json({ id: name, dialect: options.dialect, fpo_pge })
 
     })
     .catch(err => {
@@ -241,8 +241,10 @@ exports.sql = async (req, res) => {
   const db = conexion[id_con].db // asignamos el objeto de base de datos
   const dir_emp = conexion[id_con].dir_emp
   const dialect = conexion[id_con].dialect
+  const empresa= conexion[id_con].empresa
 
   const jrxml = req.body.jrxml ? req.body.jrxml : ''
+  const dataView = req.body.dataView ? req.body.dataView : ''
   const jasperServer = conexion[id_con].jasperServer ? conexion[id_con].jasperServer + '/json' : ''
 
 
@@ -1231,22 +1233,60 @@ exports.sql = async (req, res) => {
       console.log('JASPERREPORT ', jasperServer)
       opciones.mapToModel = true
       const data = {
-        json: {},
+        //json: {},
         format: 'pdf',
         jrxml: jrxml,
+        fileJson:empresa+'_'+fec_act+'_'+jrxml+'_'+Math.random().toString(36).slice(2, 14)
       }
+      if (dataView.length > 0)
+        ins_sql = 'select * from ' + dataView + ';' + ins_sql
 
       db.sequelize.query(ins_sql, opciones)
         .then(result => {
-          console.log('<=========query resultado===>', result[0])
-          if (result[0].length == 0) {  // no hay datos
+          console.log('<=========query resultado===>', result[0][1])
+          if (result[1].length == 1) {  // no hay datos
             res.send('No data for report')
             return
           }
+          
+          //**************
+          if (dataView.length > 0) {
+            // for (let key in result[0]) {
+             
+              for (let comp in result[0][0]) {
+                console.log('bt_json Object comp=',comp,result[0][0][comp])
+                 result[0][1][comp] = result[0][0][comp]
 
-          data.json = result[0]  // aumentamos el resultado 
-          console.log('JASPERREPORT llama Axios ', data)
+
+                // result[1][key]=result[0][key]
+
+              }
+            //} 
+
+            result[0].splice(0, 1); // 1 es la cantidad de elemento a eliminar
+            console.log('bt_json Object res Json=', result[0]);
+
+            
+          } 
+
+          const jsonFile = JSON.stringify(result[0])  // aumentamos el resultado
+          result=[]  // Borramos el result
+          fs.writeFileSync('tmp/'+data.fileJson, jsonFile)  // escribe el archivo json
+        
+
+
+          //result=[] 
+
+          //******************
+
+
+
+          //console.log('JASPERREPORT llama Axios ', data)
           json = JSON.stringify(data)
+          
+
+          console.log('===================>JASPER  data final',jasperServer,json)
+          result = []
           axios.get(jasperServer + '?json=' + json, { responseType: 'arraybuffer' })
 
 
