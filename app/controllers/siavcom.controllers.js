@@ -194,7 +194,7 @@ app/empresas/Demo/db.config.js
       console.log('Usuario o password invalido ');
      // res.writeHead(408, 'Invalid user '+user+' or ivalid password',{ 'Content-Type': 'text/plain' });
      // res.send();
-      writeHead(408,res,'Invalid user '+user+' or ivalid password');
+      writeHead(408,res,'Invalid user "'+user+'" or password');
       return
     });
   return
