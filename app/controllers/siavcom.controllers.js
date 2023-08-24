@@ -261,6 +261,7 @@ exports.sql = async (req, res) => {
   const condicion = { where: {}, atributes: {} }
   const opciones = {
     plain: false,
+    raw : true   
   }
   //const condicion = { where: {} }
   //console.log('condicion.where =',req.body.where)
@@ -799,11 +800,14 @@ exports.sql = async (req, res) => {
 
       console.log('===============(   UPDATE     )    datos=',datos) 
       db[nom_tab].update(datos, {
-        where: { key_pri: key_pri },
-        returning: false,
-        plain: false,
-        //transaction: transaction
+        where: { key_pri: key_pri }
       })
+         // se quito porque daba error en MSSQL
+         // returning: false,
+         // plain: false,
+         // transaction: transaction 
+
+
         // db[nom_vis].upsert(dat_act, condicion)
         .then((result) => {
           console.log('UPDATE respuesta  =====>>>', result, result[0])
@@ -1036,12 +1040,12 @@ exports.sql = async (req, res) => {
 
       db.sequelize.query(ins_sql, opciones)
         .then(data => {
-          // console.log('<=========query resultado===>', data[0])
+           console.log('=====Mandando datos SQLEXEC ======')
           res.send(data[0]);
         })
         .catch(err => {
           console.log('No se pudo ejecutar ==', err)
-          writeHead(400,res, "ERROR ", err);
+          writeHead(400,res, "", err)
         });
 
       break;
@@ -1245,42 +1249,24 @@ exports.sql = async (req, res) => {
         jrxml: jrxml,
         fileJson:empresa+'_'+fec_act+'_'+jrxml+'_'+Math.random().toString(36).slice(2, 14)
       }
-      if (dataView.length > 0)
-        ins_sql = 'select * from ' + dataView + ';' + ins_sql
+
+    //  if (dataView.length > 0)
+    //    ins_sql = 'select * from ' + dataView + ';' + ins_sql
 
       console.log('<=========JASPER ins_sql ===>', ins_sql)
 
       db.sequelize.query(ins_sql, opciones)
         .then(result => {
 
-//          console.log('<=========query resultado===>', result[0][1])
-          if (result[1].length == 1) {  // no hay datos
+          if (result[0][0].length == 0) {  // no hay datos
             res.send('No data for report')
             return
           }
-          
-          //**************
-          if (dataView.length > 0) {
-
-//            console.log('<=========query result[0][0]===>', result[0][0])
-
-            // for (let key in result[0]) {
-             
-              for (let comp in result[0][0]) {
-                console.log('Aumentando los datos generales al primer objecto de la vista comp=',comp,result[0][0][comp])
-                 result[0][1][comp] = result[0][0][comp]
-
-
-                // result[1][key]=result[0][key]
-
-              }
-            //} 
-
-            result[0].splice(0, 1); // 1 es la cantidad de elemento a eliminar
-            //console.log('bt_json Object res Json=', result[0]);
-            
-          } 
-
+          console.log('JASPER dataView=',dataView)
+          for (const campo in dataView){
+                 result[0][0][campo]=dataView[campo]
+          }
+          console.log('JASPER result[0]=',result[0][0])
           const jsonFile = JSON.stringify(result[0])  // aumentamos el resultado
           result=[]  // Borramos el result
           fs.writeFileSync('tmp/'+data.fileJson, jsonFile)  // escribe el archivo json
@@ -1292,7 +1278,7 @@ exports.sql = async (req, res) => {
           json = JSON.stringify(data)
           
 
-         // console.log('===================>JASPER  data final',jasperServer,json)
+          console.log('===================>LLAMA a JASPER ')
           result = []
           axios.get(jasperServer + '?json=' + json, { responseType: 'arraybuffer' })
 
@@ -1301,21 +1287,22 @@ exports.sql = async (req, res) => {
             //  headers: { 'Content-type': 'application/json' }
             //})
             .then(result => {
-              console.log('JASPER con exito', result.data)
+              console.log('=======GENERO reporte con JASPER ========')
               res.send(result.data)
               return
             })
             .catch(err => {
               console.log('Jasper Error =====', err.response.statusText)
               const men_err = err.response.statusText
-              writeHead(400,res, men_err);
+              writeHead(400,res, "Error :", err)
               return
             })
 
         })
         .catch(err => {
-          console.log('No se pudo ejecutar ==', err)
-          writeHead(res, 'JasperReport ' + ins_sql);
+          console.log('No se pudo ejecutar SQL ==', err)
+          writeHead(400,res, "Error SQL:", err)
+         
           return
         });
       break;
@@ -1398,6 +1385,9 @@ async function writeHead(num_err,res, men_err, error) {
 
   //var message = Buffer.from(men_err, 'utf-8').toString();
   console.error('BackEnd error message ==========>', men_err, '<=============')
+  // remplazo de rt/lf
+//  men_err=men_err.replace(/(\r\n|\n|\r)/gm, "")
+  
 
   //  res.writeHead(400, message, { 'Content-Type': 'text/plain' });
 

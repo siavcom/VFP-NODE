@@ -1,6 +1,7 @@
 module.exports = function(sequelize, DataTypes) {
   return sequelize.define('lla1_prg', {
 'prg_prg': {type: DataTypes.CHAR(100),allowNull: false,defaultValue: ' ',comment: 'NOMBRE Y UBICACION DEL PROGRAMA' },
+'path_prg': {type: DataTypes.CHAR(100),allowNull: false,defaultValue: ' ',comment: 'Page PATH' },
 'ext_prg': {type: DataTypes.CHAR(3),allowNull: false,defaultValue: ' ',comment: 'EXTENCION DEL PROGRAMA' },
 'des_prg': {type: DataTypes.CHAR(80),allowNull: false,defaultValue: ' ',comment: 'DESCRIPCION DEL PROGRAMA' },
 'sis_prg': {type: DataTypes.SMALLINT,allowNull: false,defaultValue: '0',comment: 'NUMERO DE  SISTEMA DEL PROGRAMA' },
