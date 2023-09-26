@@ -3,11 +3,18 @@ module.exports = {
   database: "SHELPRUEBA",
   dialect: "mssql",
   port: 1466,
+
+  dialectOptions: {
+    options: {
+      requestTimeout: 300000
+    }
+  },
+
   pool: {
-    max: 10, //numero de conexiones
+    max: 20, //numero de conexiones
     min: 0, //minimum number of connection in pool
-    acquire: 60000, //maximum time, in milliseconds, that pool will try to get connection before throwing error
-    idle: 10000 //maximum time, in milliseconds, that a connection can be idle before being released
+    acquire: 6000, //maximum time, in milliseconds, that pool will try to get connection before throwing error
+    idle: 36000 //maximum time, in milliseconds, that a connection can be idle before being released
   },
   // para que quite el error no existe la columna createdAt
   define: {

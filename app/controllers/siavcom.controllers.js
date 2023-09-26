@@ -58,41 +58,19 @@ exports.login = (req, res) => {
       // delete [id_tok] //removeClass()  // borramos la clase de memoria
     }
   }
-  /*
 
-
-const db = require("./app/models");  // vistas de las base de datos
-
-//{alter : true} - This checks what is the current state of the table in the database 
-//                 (which columns it has, what are their data types, etc), and then
-//                 performs the necessary changes in the table to make it match the model.
-
-//db.sequelize.sync({alter : true});   
-db.sequelize.sync(); //{ force: true } This creates the table, dropping it first if it already existed
-
-//const sequelize = new Sequelize(dbconfig.database, dbconfig.username, dbconfig.password)
-
-// Export this database so it can be used for the graphQL schemas.
-//export default db.sequelize
-
-console.log(`Inicializo sync`);
-
-
-app/empresas/Demo/db.config.js
-  */         //app/empresas/Demo/models/come
-  //console.log("Current working directory  : " + process.cwd());
   // Generamps el path a la empresa en BackEnd 
   var dir_emp = process.cwd() + '/app/empresas/' + nom_emp // directorio de empresas 
   try {
-  options = require(dir_emp + '/db.config.js')
+    options = require(dir_emp + '/db.config.js')
   } catch (error) {
-   
-  // console.log('Lee empresa options', options)
-  //console.log('Lee archivo de configuracion====>>>',options)
-  
-    console.log('No existe archivo de definicion empresa ',nom_emp)
-    writeHead(408,res,nom_emp+ ' Company definition invalid ')// , { 'Content-Type': 'text/plain' });
-    
+
+    // console.log('Lee empresa options', options)
+    //console.log('Lee archivo de configuracion====>>>',options)
+
+    console.log('No existe archivo de definicion empresa ', nom_emp)
+    writeHead(408, res, nom_emp + ' Company definition invalid ')// , { 'Content-Type': 'text/plain' });
+
     return
   }
 
@@ -100,13 +78,20 @@ app/empresas/Demo/db.config.js
   options['username'] = user
   options['password'] = pass
   options['dir_emp'] = dir_emp
+
+//  options['connetionTimeout']=300000 
+//  options['options']= { 'enableArithAbort': true, 'idleTimeoutMillis': 130000 }
+
+
+ 
+  // options['requestTimeout']=0
   // console.log('Config de conexion =====>>>', options);
 
 
   const sequelize = new Sequelize(null, null, null, options); // trata de hacer la conexion
   //console.log('Squelize =====>>>', sequelize);
 
-
+  // Faltaria el timeOut al autentificar
   sequelize.authenticate()
     .then(() => {
 
@@ -192,9 +177,9 @@ app/empresas/Demo/db.config.js
     })
     .catch(err => {
       console.log('Usuario o password invalido ');
-     // res.writeHead(408, 'Invalid user '+user+' or ivalid password',{ 'Content-Type': 'text/plain' });
-     // res.send();
-      writeHead(408,res,'Invalid user "'+user+'" or password');
+      // res.writeHead(408, 'Invalid user '+user+' or ivalid password',{ 'Content-Type': 'text/plain' });
+      // res.send();
+      writeHead(408, res, 'Invalid user "' + user + '" or password');
       return
     });
   return
@@ -207,8 +192,8 @@ exports.sql = async (req, res) => {
   // const conexion=this.conexion; 
   //console.log('Conexion Sql =====>', conexion)
   if (!req || !req.body || !req.body.id_con) {
-    writeHead(422,res, 'bad requeriment') //, { 'Content-Type': 'text/plain' });
-    
+    writeHead(422, res, 'bad requeriment') //, { 'Content-Type': 'text/plain' });
+
     return;
 
   }
@@ -239,15 +224,15 @@ exports.sql = async (req, res) => {
   }
 
   if (!conexion[id_con]) {
-    writeHead(408,res, 'Timeout or connection error')// , { 'Content-Type': 'text/plain' });
-    
+    writeHead(408, res, 'Timeout or connection error')// , { 'Content-Type': 'text/plain' });
+
     return;
   }
 
   const db = conexion[id_con].db // asignamos el objeto de base de datos
   const dir_emp = conexion[id_con].dir_emp
   const dialect = conexion[id_con].dialect
-  const empresa= conexion[id_con].empresa
+  const empresa = conexion[id_con].empresa
 
   const jrxml = req.body.jrxml ? req.body.jrxml : ''
   const dataView = req.body.dataView ? req.body.dataView : ''
@@ -261,7 +246,7 @@ exports.sql = async (req, res) => {
   const condicion = { where: {}, atributes: {} }
   const opciones = {
     plain: false,
-    raw : true   
+    raw: true
   }
   //const condicion = { where: {} }
   //console.log('condicion.where =',req.body.where)
@@ -306,28 +291,23 @@ exports.sql = async (req, res) => {
 
   switch (tip_lla) {
     case 'USE':
-      // console.log('=========== USE ==============', nom_vis)
-      // console.log('====== Where ================', condicion);
-      //  console.log('====== IN nom_tab ================', nom_tab);
 
-      //  console.log('====== Order by  ================', orden);
       if (db[nom_tab]) {
 
         db[nom_tab].findAll(condicion, orden)
           .then(data => {
+            console.log('USE tabla=', nom_tab, 'condicion=', condicion, 'Datos=', data)
             res.send(data);
           })
           .catch(err => {
             console.log('Error AXIOS', err);
-            writeHead(400,res, err.message)//, { 'Content-Type': 'text/plain' });
-            return          });
-
+            writeHead(400, res, err.message)//, { 'Content-Type': 'text/plain' });
+            return
+          });
 
       } else {
         console.error('No existe sequelize model', nom_tab)
-        writeHead(400,res, "Don't exists sequelize model " + nom_tab)//, { 'Content-Type': 'text/plain' });
-
-
+        writeHead(400, res, "Don't exists sequelize model " + nom_tab)//, { 'Content-Type': 'text/plain' });
       }
       break;
 
@@ -347,9 +327,9 @@ exports.sql = async (req, res) => {
           // console.log('=====USENODATA data=======',data)
           console.log('USENODATA data.length===>', data[0])
           if (!data[0][0] || data[0][0].length == 0) {  //  No hay tabla
-            writeHead(400,res, 'sqlView Invalid : ' + nom_vis) //, { 'Content-Type': 'text/plain' });
-            
-            return 
+            writeHead(400, res, 'sqlView Invalid : ' + nom_vis) //, { 'Content-Type': 'text/plain' });
+
+            return
           }
           // console.log('==USENODATA ===>', data[0][0])
           let tip_campo = '';
@@ -387,7 +367,7 @@ exports.sql = async (req, res) => {
             tip_campo = data[0][i].tip_dat.toLowerCase().substring(0, 3);
             val_defa = data[0][i].vue_dat ? data[0][i].vue_dat.trim() : ''
             // val_defa = data[0][i].vvu_dat.trim();  // valor vue
-            console.log('Nombre del campo,tipo, valor=====>>>', nom_campo, tip_campo, val_defa)
+            // console.log('Nombre del campo,tipo, valor=====>>>', nom_campo, tip_campo, val_defa)
             if (nom_campo == 'timestamp') {
               sw_timestamp = true
               tip_campo = 'tsp'
@@ -424,12 +404,12 @@ exports.sql = async (req, res) => {
                 break;
               case 'tim':
                 tip_campo = 'TIME'
-                val_campo = "'19000101 00:00:00'"
+                val_campo = "'1900-01-01 00:00:00'"
 
                 break;
               case 'dat':
                 tip_campo = 'DATE'
-                val_campo = "'19000101'"
+                val_campo = "'1900-01-01'"
 
                 break;
               case 'num':
@@ -584,8 +564,8 @@ exports.sql = async (req, res) => {
         }) // fin then.data
         .catch(err => {
           console.log('USENODATA SQLError' + ins_sql, err)
-          writeHead(400,res, "USENODATA SQL ERROR " + ins_sql)
-          
+          writeHead(400, res, "USENODATA SQL ERROR " + ins_sql)
+
           return
         });
       // res.send(db[nom_vis]);
@@ -607,7 +587,7 @@ exports.sql = async (req, res) => {
     case 'INSERT':
 
       if (!datos) {
-        writeHead(400,res, 'No hay datos as insertar')
+        writeHead(400, res, 'No hay datos as insertar')
 
         //        res.writeHead(400, 'No hay datos as insertar', { 'Content-Type': 'text/plain' });
         //        res.send();
@@ -705,7 +685,7 @@ exports.sql = async (req, res) => {
         console.error('Insert  Error', error)
         let men_err = 'Insert error ' + error
         console.error('Insert  Error', men_err)// transaction.rollback();
-        writeHead(400,res, men_err, error);
+        writeHead(400, res, men_err, error);
 
 
 
@@ -753,16 +733,16 @@ exports.sql = async (req, res) => {
     case 'UPDATE':
 
       if (!datos) {
-        writeHead(400,res, "No DATA to update")
+        writeHead(400, res, "No DATA to update")
         return;
       }
 
       if (datos.key_pri == 0) {
-        writeHead(400,res, "Can't not update key_pri=0")
+        writeHead(400, res, "Can't not update key_pri=0")
         return
       }
 
-      
+
       const key_pri = datos.key_pri;
 
       delete datos['key_pri']   // borramos el key pri de los datos a actualizar
@@ -798,14 +778,14 @@ exports.sql = async (req, res) => {
 
        */
 
-      console.log('===============(   UPDATE     )    datos=',datos) 
+      console.log('===============(   UPDATE     )    datos=', datos)
       db[nom_tab].update(datos, {
         where: { key_pri: key_pri }
       })
-         // se quito porque daba error en MSSQL
-         // returning: false,
-         // plain: false,
-         // transaction: transaction 
+        // se quito porque daba error en MSSQL
+        // returning: false,
+        // plain: false,
+        // transaction: transaction 
 
 
         // db[nom_vis].upsert(dat_act, condicion)
@@ -838,7 +818,7 @@ exports.sql = async (req, res) => {
 
             })
             .catch(err => {     // Error al leer el TimeStamp
-              writeHead(400,res, 'Update error', err)
+              writeHead(400, res, 'Update error', err)
               console.error('Update Error', err)
               // transaction.rollback();
 
@@ -849,7 +829,7 @@ exports.sql = async (req, res) => {
         .catch(error => {
           console.error('Update SQL error=>> ', error)
 
-          writeHead(400,res, 'Update Error', error)
+          writeHead(400, res, 'Update Error', error)
 
           //transaction.rollback();
 
@@ -875,7 +855,7 @@ exports.sql = async (req, res) => {
     case 'DELETE':
 
       if (!condicion) {
-        writeHead(400,res, 'Invalid condition WHERE')
+        writeHead(400, res, 'Invalid condition WHERE')
 
         return;
       }
@@ -906,7 +886,7 @@ exports.sql = async (req, res) => {
         })
         .catch(err => {
           console.log('DELETE error===>', err)
-          writeHead(400,res, err.message);
+          writeHead(400, res, err.message);
         });
 
       break;
@@ -1026,7 +1006,7 @@ exports.sql = async (req, res) => {
         })
         .catch(err => {
           console.log('No se pudo ejecutar ==', err)
-          writeHead(400,res, " ERROR " + ins_sql);
+          writeHead(400, res, " ERROR " + ins_sql);
         });
 
       break;
@@ -1036,16 +1016,24 @@ exports.sql = async (req, res) => {
     case 'SQLEXEC':
       //console.log('SQLEXEC ins_sql====>>>>',ins_sql)
       opciones.mapToModel = true
+
+     // opciones.dialectOptions={requestTimeout: 300000 }
+      
+    
+
+      //opciones.requestTimeout= 60000*2
+ 
       console.log('SQLEXEC opciones====>>>>', ins_sql, opciones)
 
       db.sequelize.query(ins_sql, opciones)
         .then(data => {
-           console.log('=====Mandando datos SQLEXEC ======')
+          console.log('=====Regresando datos SQLEXEC ======')
           res.send(data[0]);
         })
         .catch(err => {
           console.log('No se pudo ejecutar ==', err)
-          writeHead(400,res, "", err)
+          writeHead(400, res, "", err)
+
         });
 
       break;
@@ -1115,7 +1103,7 @@ exports.sql = async (req, res) => {
 
           console.log('Error al ejecutar el query =====> ', query)
           //            writeHead(res, "Error al ejecutar el query :" + query, err)
-          writeHead(400,res, "", err)
+          writeHead(400, res, "", err)
 
           //      }
 
@@ -1150,13 +1138,13 @@ exports.sql = async (req, res) => {
             })
             .catch(err => {
               console.log('No se pudo ejecutar ==', err)
-              writeHead(400,res, "query :" + ins_sql + ' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
+              writeHead(400, res, "query :" + ins_sql + ' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
               return
             });
         })
         .catch(err => {
           console.log('No se pudo ejecutar ==', err)
-          writeHead(400,res, "query :" + ins_sql + ' SQL ERROR :' + err);
+          writeHead(400, res, "query :" + ins_sql + ' SQL ERROR :' + err);
         });
 
       break;
@@ -1183,14 +1171,14 @@ exports.sql = async (req, res) => {
               })
               .catch(err => {
                 console.log('No se pudo ejecutar ==', err)
-                writeHead(400,res, "query :" + ins_sql + ' SQL ERROR :' + err);
+                writeHead(400, res, "query :" + ins_sql + ' SQL ERROR :' + err);
               });
           }
 
         })
         .catch(err => {
           console.log('No se pudo ejecutar ==', err)
-          writeHead(400,res, "SQL ERROR " + ins_sql);
+          writeHead(400, res, "SQL ERROR " + ins_sql);
         });
 
       break;
@@ -1206,13 +1194,13 @@ exports.sql = async (req, res) => {
             res.send('Se genero tabla ' + nom_tab);
           }
           else {
-            writeHead(400,res, "SQL ERROR " + res, { 'Content-Type': 'text/plain' });
+            writeHead(400, res, "SQL ERROR " + res, { 'Content-Type': 'text/plain' });
             return
           }
         }) //  Fin promesa
         .catch(err => {
           console.log('No se pudo generar MODEL ', err)
-          writeHead(400,res, "NODE ERROR :" + err,)
+          writeHead(400, res, "NODE ERROR :" + err,)
           return
         });
 
@@ -1233,7 +1221,7 @@ exports.sql = async (req, res) => {
           } // Fin For 
         }).catch(err => {
           console.log('No se pudo ejecutar ==', err)
-          writeHead(400,res, "SQL ERROR " + ins_sql)
+          writeHead(400, res, "SQL ERROR " + ins_sql)
           return
         });
       break
@@ -1247,11 +1235,11 @@ exports.sql = async (req, res) => {
         //json: {},
         format: 'pdf',
         jrxml: jrxml,
-        fileJson:empresa+'_'+fec_act+'_'+jrxml+'_'+Math.random().toString(36).slice(2, 14)
+        fileJson: empresa + '_' + fec_act + '_' + jrxml + '_' + Math.random().toString(36).slice(2, 14)
       }
 
-    //  if (dataView.length > 0)
-    //    ins_sql = 'select * from ' + dataView + ';' + ins_sql
+      //  if (dataView.length > 0)
+      //    ins_sql = 'select * from ' + dataView + ';' + ins_sql
 
       console.log('<=========JASPER ins_sql ===>', ins_sql)
 
@@ -1262,21 +1250,21 @@ exports.sql = async (req, res) => {
             res.send('No data for report')
             return
           }
-          console.log('JASPER dataView=',dataView)
-          for (const campo in dataView){
-                 result[0][0][campo]=dataView[campo]
+          console.log('JASPER dataView=', dataView)
+          for (const campo in dataView) {
+            result[0][0][campo] = dataView[campo]
           }
-          console.log('JASPER result[0]=',result[0][0])
+          console.log('JASPER result[0]=', result)
           const jsonFile = JSON.stringify(result[0])  // aumentamos el resultado
-          result=[]  // Borramos el result
-          fs.writeFileSync('tmp/'+data.fileJson, jsonFile)  // escribe el archivo json
+          result = []  // Borramos el result
+          fs.writeFileSync('tmp/' + data.fileJson, jsonFile)  // escribe el archivo json
 
           //result=[] 
 
           //******************
           //console.log('JASPERREPORT llama Axios ', data)
           json = JSON.stringify(data)
-          
+
 
           console.log('===================>LLAMA a JASPER ')
           result = []
@@ -1294,15 +1282,15 @@ exports.sql = async (req, res) => {
             .catch(err => {
               console.log('Jasper Error =====', err.response.statusText)
               const men_err = err.response.statusText
-              writeHead(400,res, "Error :", err)
+              writeHead(400, res, "Error :", err)
               return
             })
 
         })
         .catch(err => {
           console.log('No se pudo ejecutar SQL ==', err)
-          writeHead(400,res, "Error SQL:", err)
-         
+          writeHead(400, res, "Error SQL:", err)
+
           return
         });
       break;
@@ -1317,7 +1305,7 @@ exports.sql = async (req, res) => {
 //////////////////////////////////////////////////////
 /////////////////  Funciones /////////////////////////
 //////////////////////////////////////////////////////
-async function writeHead(num_err,res, men_err, error) {
+async function writeHead(num_err, res, men_err, error) {
 
   //if (typeof error == 'string') {
   if (error) {
@@ -1386,13 +1374,20 @@ async function writeHead(num_err,res, men_err, error) {
   //var message = Buffer.from(men_err, 'utf-8').toString();
   console.error('BackEnd error message ==========>', men_err, '<=============')
   // remplazo de rt/lf
-//  men_err=men_err.replace(/(\r\n|\n|\r)/gm, "")
-  
+  //  men_err=men_err.replace(/(\r\n|\n|\r)/gm, "")
+
 
   //  res.writeHead(400, message, { 'Content-Type': 'text/plain' });
+  try {
+    res.writeHead(num_err, men_err, { 'Content-Type': 'text/plain' })
+    res.send()
+  } catch (error) {
+    res.writeHead(num_err, error)
+    res.send()
 
-  res.writeHead(num_err, men_err,{ 'Content-Type': 'text/plain' })
-  res.send()
+  }
+
+
   return
 }
 
