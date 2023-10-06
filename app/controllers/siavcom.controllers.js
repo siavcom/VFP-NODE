@@ -7,6 +7,9 @@
 
 // npm install requestify  
 
+// query options={ type: QueryTypes.SELECT}
+
+
 /////////////////////// Fernando Cuadras //////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////
 
@@ -17,7 +20,7 @@ const fs = require('fs');
 const { Sequelize, DataTypes, QueryTypes } = require('sequelize');
 const { Connection } = require('tedious');
 
-const Op = Sequelize.Op;  // Operaciones logicas del Sequeliz
+const Op = Sequelize.Op;  // Operaciones logicas del Sequelize
 
 const conexion = {}
 
@@ -38,9 +41,16 @@ Sequelize.DATE.prototype._stringify = function _stringify(date, options) {
 
 
 
-exports.login = (req, res) => {
+exports.login = (req, res,socket) => {
+  console.log('siavcom.controlers logi=>>>>>>>',JSON.parse(req))  
+  let obj_json={}
+  if (req && req.query && req.query.json)
+     obj_json = JSON.parse(req.query.json)
+  else
+     obj_json=JSON.parse(req)    
 
-  const obj_json = JSON.parse(req.query.json)
+
+
   console.log('json de conexion====>>>>>', obj_json)
   const fec_act = new Date().toISOString().slice(0, 10); //  Fecha actual del servidor de node
 
@@ -171,6 +181,14 @@ exports.login = (req, res) => {
       db.sequelize.query(ins_sql)
         .then(data => { fpo_pge = data[0].fec_act })
 
+      if (socket){
+//        res=JSON.stringify({ id: name, dialect: options.dialect, fpo_pge })
+        res={ id: name, dialect: options.dialect, fpo_pge }
+       
+        socket.emit('loginOk', res)
+        return
+/////////////////////
+      }
 
       res.json({ id: name, dialect: options.dialect, fpo_pge })
 
@@ -178,7 +196,15 @@ exports.login = (req, res) => {
     .catch(err => {
       console.log('Usuario o password invalido ');
       // res.writeHead(408, 'Invalid user '+user+' or ivalid password',{ 'Content-Type': 'text/plain' });
-      // res.send();
+      // res_send(res,);
+
+      if (socket) {
+        console.log('Fail to SQL connect', 'Invalid user "' + user + '" or password');
+        socket.emit('loginFail', res)
+        socket.disconnect()
+        return
+      }
+
       writeHead(408, res, 'Invalid user "' + user + '" or password');
       return
     });
@@ -297,7 +323,7 @@ exports.sql = async (req, res) => {
         db[nom_tab].findAll(condicion, orden)
           .then(data => {
             console.log('USE tabla=', nom_tab, 'condicion=', condicion, 'Datos=', data)
-            res.send(data);
+            res_send(res,data);
           })
           .catch(err => {
             console.log('Error AXIOS', err);
@@ -313,7 +339,7 @@ exports.sql = async (req, res) => {
 
 
     case 'USENODATA':
-      console.log('USENODATA dialect===>', dialect)
+      //console.log('USENODATA dialect===>', dialect)
       if (dialect == 'postgres')
         ins_sql = `select * from p_schema('${nom_vis}')`
       else
@@ -325,7 +351,7 @@ exports.sql = async (req, res) => {
         .then(data => {
           //console.log('============== Definicion Schema=====', data[0][0]);
           // console.log('=====USENODATA data=======',data)
-          console.log('USENODATA data.length===>', data[0])
+          //console.log('USENODATA data.length===>', data[0])
           if (!data[0][0] || data[0][0].length == 0) {  //  No hay tabla
             writeHead(400, res, 'sqlView Invalid : ' + nom_vis) //, { 'Content-Type': 'text/plain' });
 
@@ -544,19 +570,19 @@ exports.sql = async (req, res) => {
 
           view.exp_indice = con_ind // Indice a utilizar
 
-          console.log(' Use nodata Vista ======>', view)
+          console.log(' Use nodata Vista ======>', view.nom_tab,'Index=',view.exp_indice)
           //console.log('===================================================================== ')
           // console.log('USENODATA con_ind ===>',con_ind)
 
 
-          res.send(view); // enviamos la vista
+          res_send(res,view); // enviamos la vista
           return
           /* ver 1
           }) // fin then.data
 
             .catch(err => {
               res.writeHead(400, err.message, { 'Content-Type': 'text/plain' });
-              res.send();
+              res_send(res,);
 
             });
             */
@@ -568,18 +594,18 @@ exports.sql = async (req, res) => {
 
           return
         });
-      // res.send(db[nom_vis]);
+      // res_send(res,db[nom_vis]);
 
       break;
     /*     console.log('============== Estructura ====================', nom_vis);
          que_int.describeTable(nom_vis).then(data => {
    
            console.log(data);
-           res.send(data);
+           res_send(res,data);
          })
            .catch(err => {
              res.writeHead(400,"Ocurrio un error al leer de la Base de DAtos",{'Content-Type': 'text/plain'});
-             res.send();
+             res_send(res,);
            });
    
          break;
@@ -590,7 +616,7 @@ exports.sql = async (req, res) => {
         writeHead(400, res, 'No hay datos as insertar')
 
         //        res.writeHead(400, 'No hay datos as insertar', { 'Content-Type': 'text/plain' });
-        //        res.send();
+        //        res_send(res,);
 
         return;
       }
@@ -678,7 +704,7 @@ exports.sql = async (req, res) => {
         // db[nom_tab].findAll(condicion)
         console.log('condicion where', condicion.where, '======== datos insertados leidos =======', data[0]);
         // envia el timestamp
-        res.send(data[0]);
+        res_send(res,data[0]);
 
       } catch (error) {
 
@@ -715,7 +741,7 @@ exports.sql = async (req, res) => {
             .then(data => {
               console.log('======== datos insertados leidos =======', data[0]);
               // envia el timestamp
-              res.send(data[0]);
+              res_send(res,data[0]);
             })
  
         })
@@ -814,7 +840,7 @@ exports.sql = async (req, res) => {
               console.log('UPDATE Datos actualizados =======>>>>', datos[0])
 
 
-              res.send(datos[0])
+              res_send(res,datos[0])
 
             })
             .catch(err => {     // Error al leer el TimeStamp
@@ -824,7 +850,7 @@ exports.sql = async (req, res) => {
 
             });
           ///////////////////
-          //res.send(data);
+          //res_send(res,data);
         })
         .catch(error => {
           console.error('Update SQL error=>> ', error)
@@ -882,7 +908,7 @@ exports.sql = async (req, res) => {
         .then(data => {
           console.log('DELETE condicion =====', condicion, data)
           data = { result: true }
-          res.send(data);
+          res_send(res,data);
         })
         .catch(err => {
           console.log('DELETE error===>', err)
@@ -996,10 +1022,10 @@ exports.sql = async (req, res) => {
             } // Fin del for
 
           }
-          res.send(est_tabla);
+          res_send(res,est_tabla);
 
 
-          //res.send(result[0]);  
+          //res_send(res,result[0]);  
           //          console.log('Resultado GET',result[0].DATA_TYPE, result[0].CHARACTER_MAXIMUM_LENGTH)
           //return callback(result[0].DATA_TYPE, result[0].CHARACTER_MAXIMUM_LENGTH);
           //callback(false, false)
@@ -1028,7 +1054,7 @@ exports.sql = async (req, res) => {
       db.sequelize.query(ins_sql, opciones)
         .then(data => {
           console.log('=====Regresando datos SQLEXEC ======')
-          res.send(data[0]);
+          res_send(res,data[0]);
         })
         .catch(err => {
           console.log('No se pudo ejecutar ==', err)
@@ -1133,7 +1159,7 @@ exports.sql = async (req, res) => {
             .then(data => {
               console.log('<=========query GENERA INDICES=======>', data)
               //   this.genModel(nom_tab, db, dir_emp)
-              res.send(query)
+              res_send(res,query)
 
             })
             .catch(err => {
@@ -1191,7 +1217,7 @@ exports.sql = async (req, res) => {
         .then((data) => {
 
           if (data == 'Ok') {
-            res.send('Se genero tabla ' + nom_tab);
+            res_send(res,'Se genero tabla ' + nom_tab);
           }
           else {
             writeHead(400, res, "SQL ERROR " + res, { 'Content-Type': 'text/plain' });
@@ -1246,8 +1272,8 @@ exports.sql = async (req, res) => {
       db.sequelize.query(ins_sql, opciones)
         .then(result => {
 
-          if (result[0][0].length == 0) {  // no hay datos
-            res.send('No data for report')
+          if (result && result[0] && result[0][0] && result[0][0].length == 0) {  // no hay datos
+            res_send(res,'No data for report')
             return
           }
           console.log('JASPER dataView=', dataView)
@@ -1276,7 +1302,7 @@ exports.sql = async (req, res) => {
             //})
             .then(result => {
               console.log('=======GENERO reporte con JASPER ========')
-              res.send(result.data)
+              res_send(res,result.data)
               return
             })
             .catch(err => {
@@ -1305,6 +1331,15 @@ exports.sql = async (req, res) => {
 //////////////////////////////////////////////////////
 /////////////////  Funciones /////////////////////////
 //////////////////////////////////////////////////////
+
+async function res_send( res, data) {
+if (res==null)
+   return data
+
+res.send(data)
+
+}
+
 async function writeHead(num_err, res, men_err, error) {
 
   //if (typeof error == 'string') {
