@@ -57,15 +57,10 @@ app.get('/', (req, res) => {
   res.render('index.pug'); // Se muestra la plantilla hello.pug
 });
 
-
-
-
 // inicializa las rutas de llamadas
 require("./app/routes/siavcom.routes")(app);
 
 //require("controllers/siavcom.controllers.js");
-
-
 
 /////////////////////////////////////////////////////////////////////////////////////////
 // set port, listen for requests
@@ -93,10 +88,12 @@ console.log(`Inicializo rutas Axios`);
 
 io.on('connection', async (socket) => {
   const origin = socket.handshake.origin
-  // socket.handshake.origin
+
+  //  console.log('1= Socket connected ready headers=', socket.handshake.headers);
+  //  console.log('2= Socket address=', socket.handshake.address);
+  console.log('3= Socket auth=', socket.handshake.auth)
 
 
-  console.log('1= socket connected ready =', socket.handshake, 'Auth=======', socket.handshake.auth);
   /*
     let req =JSON.stringify(
       {query:socket.handshake.auth}
@@ -104,40 +101,60 @@ io.on('connection', async (socket) => {
   
     */
 
-  let req = JSON.stringify(socket.handshake.auth)
-
-
 
   // llamadas Sql
   const sqlServer = require("./app/controllers/siavcom.controllers.js");
 
-  sqlServer.login(req,'',socket)
+  if (socket.handshake.auth.nom_emp &&
+    socket.handshake.auth.user &&
+    socket.handshake.auth.pass) {
 
+    let req = JSON.stringify(socket.handshake.auth)
+//    sqlServer.login(req, socket)
+  } else {
+
+
+    if (!socket.handshake.auth.id_con) { // no hay id_con
+      consoloe.log('=========socket id invalid ==========', socket.handshake.auth)
+      socket.disconnect()
+    }
+
+    // no se puede porque automaticamente se trata de reconectar el socket sin requerimientos
+    // sqlServer.sql(socket.handshake.auth,socket)
+  }
   //res={ id: name, dialect: options.dialect, fpo_pge }
-
-
   socket.on('disconnect', () => {
-    console.log('user disconnected');
+    console.log('==============client socket disconnected============');
+
   });
 
 
-  socket.on('login', (msg) => {
-
-    const res = siavcom.login(req)
+  socket.on('login', (req) => {
+    sqlServer.login(req, socket)
     //    const obj_json = JSON.parse(msg)
-    console.log('login: ');
-    console.log('json de conexion====>>>>>', res)
-    io.emit('broadcast', res);
+    console.log('============ login Directo ========= ');
+ //   io.emit('broadcast', res);
   });
 
   // mensajes sql
-  socket.on('sql', async (def_con) => {
 
-    let req = { query: def_con }  // donde esta el mensaje de conexion
+  socket.on("sql async", async (req, callback) => {
 
-    const res = await sqlServer.sql(req);
-    console.log('message: ', msg, 'resp=', resp);
-    socket.emit('broadcast', res)
+    console.log('============  Socket call SQL req=', req)
+    sqlServer.sql(req, socket, callback);
+    console.log('============  Socket return SQL ')
+    //    callback({res});
+
+    //    callback({
+    //      status: "ok"
+    //    });
+  });
+
+
+
+  socket.on('sql', (req) => {
+    const res = sqlServer.sql(req, socket);
+    console.log('sockt message: ', req, res);
   });
 
 });
