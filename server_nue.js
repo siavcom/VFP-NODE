@@ -7,6 +7,8 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 
 const app = express();
+
+
 /*
 var corsOptions = {
   origin: "http://localhost:8081"
@@ -55,64 +57,17 @@ app.get('/', (req, res) => {
   res.render('index.pug'); // Se muestra la plantilla hello.pug
 });
 
-
-
-/////////////////////////////////////////////////////
-/*
-app.get("/", (req, res) => {
-    res.json({ message: "============Siavcom NODEJS Server================" });
-
-});
-*/
-//////////////////////////////////////////////////////
-
-
-
-//const Sequelize = require('sequelize');
-
-
-
-
-/* Se quita e1 Junio 2021
-
-const db = require("./app/models");  // vistas de las base de datos
-
-//{alter : true} - This checks what is the current state of the table in the database 
-//                 (which columns it has, what are their data types, etc), and then
-//                 performs the necessary changes in the table to make it match the model.
-
-//db.sequelize.sync({alter : true});   
-db.sequelize.sync(); //{ force: true } This creates the table, dropping it first if it already existed
-
-//const sequelize = new Sequelize(dbconfig.database, dbconfig.username, dbconfig.password)
-
-// Export this database so it can be used for the graphQL schemas.
-//export default db.sequelize
-
-console.log(`Inicializo sync`);
-*/
-
 // inicializa las rutas de llamadas
-
 require("./app/routes/siavcom.routes")(app);
 
-console.log(`Inicializo rutas Axios`);
-
+//require("controllers/siavcom.controllers.js");
 
 /////////////////////////////////////////////////////////////////////////////////////////
 // set port, listen for requests
-//const PORT = process.env.PORT || 8080;
+
 const PORT = process.env.PORT || 38080;
+//const PORT = process.env.PORT || 38081;
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-///////////////////  only Axios /////////////////////////////
-
-/*
-app.listen(PORT, () => {
-  console.log(`Axios Server is runing  on port= ${PORT}.`);
-});
-*/
 
 //////////////////// Axios and socket Server /////////////////////////////////////
 
@@ -128,37 +83,79 @@ var io = require('socket.io')(http,
 
 );
 
+// inicializa rutas de llamada
+console.log(`Inicializo rutas Axios`);
 
-io.on('connection', (socket) => {
-  let req = socket.handshake.def_con;
-  console.log('======Try to connected ready===');
-  io.emit('broadcast','Connection OK')
+io.on('connection', async (socket) => {
+  const origin = socket.handshake.origin
 
+  //  console.log('1= Socket connected ready headers=', socket.handshake.headers);
+  //  console.log('2= Socket address=', socket.handshake.address);
+  console.log('3= Socket auth=', socket.handshake.auth)
+
+
+  /*
+    let req =JSON.stringify(
+      {query:socket.handshake.auth}
+    )  // donde esta el mensaje de conexion
+  
+    */
+
+
+  // llamadas Sql
+  const sqlServer = require("./app/controllers/siavcom.controllers.js");
+
+  if (socket.handshake.auth.nom_emp &&
+    socket.handshake.auth.user &&
+    socket.handshake.auth.pass) {
+
+    let req = JSON.stringify(socket.handshake.auth)
+//    sqlServer.login(req, socket)
+  } else {
+
+
+    if (!socket.handshake.auth.id_con) { // no hay id_con
+      consoloe.log('=========socket id invalid ==========', socket.handshake.auth)
+      socket.disconnect()
+    }
+
+    // no se puede porque automaticamente se trata de reconectar el socket sin requerimientos
+    // sqlServer.sql(socket.handshake.auth,socket)
+  }
+  //res={ id: name, dialect: options.dialect, fpo_pge }
   socket.on('disconnect', () => {
-    console.log('user disconnected');
-  });
-
-  socket.on('login', (msg) => {
-
-    const obj_json = JSON.parse(msg)
-    console.log('login: ');
-    console.log('json de conexion====>>>>>', obj_json)
+    console.log('==============client socket disconnected============');
 
   });
 
- 
 
-
-
-  socket.on('hola', (msg) => {
-    console.log('message: ' + msg);
+  socket.on('login', (req) => {
+    sqlServer.login(req, socket)
+    //    const obj_json = JSON.parse(msg)
+    console.log('============ login Directo ========= ');
+ //   io.emit('broadcast', res);
   });
 
-  socket.on('call', (json) => {
+  // mensajes sql
 
-    console.log('message: ' + msg);
+  socket.on("sql async", async (req, callback) => {
+
+    console.log('============  Socket call SQL req=', req)
+    sqlServer.sql(req, socket, callback);
+    console.log('============  Socket return SQL ')
+    //    callback({res});
+
+    //    callback({
+    //      status: "ok"
+    //    });
   });
 
+
+
+  socket.on('sql', (req) => {
+    const res = sqlServer.sql(req, socket);
+    console.log('sockt message: ', req, res);
+  });
 
 });
 

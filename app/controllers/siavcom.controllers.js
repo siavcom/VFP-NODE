@@ -799,15 +799,30 @@ exports.sql = async (req, res, callback) => {
       delete datos['key_pri']   // borramos el key pri de los datos a actualizar
       delete datos['val_vista'];
 
+
+      console.log('UPDATE datos==========>',datos)
+
       for (const campo in datos) {  // Checamos todos los campos buffer
         //campo!='timestamp' &&//Buffer.isBuffer(datos[campo])
-        if (datos[campo].type && datos[campo].type == 'Buffer') {
+        if (! socket && datos[campo].type && datos[campo].type == 'Buffer') {
           console.log('UPDATE campo buffer ===>>>', campo)
           const buffer = datos[campo]
           datos[campo] = Buffer.from(buffer)
-        }
-      }
+        } else
+       if (typeof datos[campo] == 'object') {
 
+        const arrBuffer = new ArrayBuffer(datos[campo]);
+        datos[campo] = Buffer.from(arrBuffer);
+
+          console.log('=======0UPDATE campo buffer ===>>>', datos[campo])
+
+      //    const buffer =new DataView(datos[campo])  // view.getUint8())    //new Uint8Array( datos[campo])
+      //    datos[campo] =buffer.getUint8()       //new Uint8Array(datos[buffer]);
+        
+        }
+
+        console.log('UPDATE campo=',campo,'Type=',typeof datos[campo])
+      }
 
       // No es Postgres . Cambiamos el TimeStamp to Buffer para comparar actualizacion
 
@@ -1305,7 +1320,7 @@ exports.sql = async (req, res, callback) => {
           for (const campo in dataView) {
             result[0][0][campo] = dataView[campo]
           }
-          console.log('JASPER result[0]=', result)
+          //console.log('JASPER result[0]=', result)
           const jsonFile = JSON.stringify(result[0])  // aumentamos el resultado
           result = []  // Borramos el result
           fs.writeFileSync('tmp/' + data.fileJson, jsonFile)  // escribe el archivo json
