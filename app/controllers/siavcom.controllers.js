@@ -267,10 +267,21 @@ exports.sql = async (req, res, callback) => {
   }
 
   if (!conexion[id_con]) {
-    if (broadcast) {// si es llamdo del socket
+
+
+    const socket = res.handshake ? res : false
+
+    if (socket) {
       res.emit('error', 'Timeout or connection error')
-      res.disconnect()
+      return
     }
+
+    /*
+     if (broadcast) {// si es llamdo del socket
+       res.emit('error', 'Timeout or connection error')
+       res.disconnect()
+     }
+     */
     writeHead(broadcast, 408, res, 'Timeout or connection error')// , { 'Content-Type': 'text/plain' });
 
     return;
@@ -800,28 +811,31 @@ exports.sql = async (req, res, callback) => {
       delete datos['val_vista'];
 
 
-      console.log('UPDATE datos==========>',datos)
+      console.log('UPDATE datos==========>', datos)
 
       for (const campo in datos) {  // Checamos todos los campos buffer
         //campo!='timestamp' &&//Buffer.isBuffer(datos[campo])
-        if (! socket && datos[campo].type && datos[campo].type == 'Buffer') {
-          console.log('UPDATE campo buffer ===>>>', campo)
+        console.log('UPDATE campo =',campo,'Type=', datos[campo].type)
+
+
+        if (!socket && datos[campo].type && datos[campo].type == 'Buffer') {
+          console.log('UPDATE campo buffer axios ===>>>', campo)
           const buffer = datos[campo]
           datos[campo] = Buffer.from(buffer)
         } else
-       if (typeof datos[campo] == 'object') {
+          if (typeof datos[campo] == 'object') {
 
-        const arrBuffer = new ArrayBuffer(datos[campo]);
-        datos[campo] = Buffer.from(arrBuffer);
+            const arrBuffer = new ArrayBuffer(datos[campo]);
+            datos[campo] = Buffer.from(arrBuffer);
 
-          console.log('=======0UPDATE campo buffer ===>>>', datos[campo])
+            console.log('=======0UPDATE campo buffer socket ===>>>', datos[campo])
 
-      //    const buffer =new DataView(datos[campo])  // view.getUint8())    //new Uint8Array( datos[campo])
-      //    datos[campo] =buffer.getUint8()       //new Uint8Array(datos[buffer]);
-        
-        }
+            //    const buffer =new DataView(datos[campo])  // view.getUint8())    //new Uint8Array( datos[campo])
+            //    datos[campo] =buffer.getUint8()       //new Uint8Array(datos[buffer]);
 
-        console.log('UPDATE campo=',campo,'Type=',typeof datos[campo])
+          }
+
+        console.log('UPDATE campo=', campo, 'Type=', typeof datos[campo])
       }
 
       // No es Postgres . Cambiamos el TimeStamp to Buffer para comparar actualizacion
