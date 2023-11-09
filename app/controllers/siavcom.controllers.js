@@ -184,20 +184,21 @@ exports.login = (req, res) => {
 
       let fpo_pge = ''
       db.sequelize.query(ins_sql)
-        .then(data => { fpo_pge = data[0].fec_act })
+        .then(data => {
+          fpo_pge = data[0][0].fec_act
 
-      if (socket) {
+          if (socket) {
 
-        //        res=JSON.stringify({ id: name, dialect: options.dialect, fpo_pge })
-        res = { id: name, dialect: options.dialect, fpo_pge }
+            //        res=JSON.stringify({ id: name, dialect: options.dialect, fpo_pge })
+            res = { id: name, dialect: options.dialect, fpo_pge }
+            // console.log('Login res=',res,data[0][0])
+            socket.emit('loginOk', res)
+            return
+            /////////////////////
+          }
 
-        socket.emit('loginOk', res)
-        return
-        /////////////////////
-      }
-
-      res.json({ id: name, dialect: options.dialect, fpo_pge })
-
+          res.json({ id: name, dialect: options.dialect, fpo_pge })
+        })
     })
     .catch(err => {
       console.log('Usuario o password invalido ');
@@ -815,7 +816,7 @@ exports.sql = async (req, res, callback) => {
 
       for (const campo in datos) {  // Checamos todos los campos buffer
         //campo!='timestamp' &&//Buffer.isBuffer(datos[campo])
-        console.log('UPDATE campo =',campo,'Type=', datos[campo].type)
+        console.log('UPDATE campo =', campo, 'Type=', datos[campo].type)
 
 
         if (!socket && datos[campo].type && datos[campo].type == 'Buffer') {
@@ -1096,19 +1097,16 @@ exports.sql = async (req, res, callback) => {
     case 'SQLEXEC':
       //console.log('SQLEXEC ins_sql====>>>>',ins_sql)
       opciones.mapToModel = true
-
       // opciones.dialectOptions={requestTimeout: 300000 }
-
-
-
-      //opciones.requestTimeout= 60000*2
+     //opciones.requestTimeout= 60000*2
 
       console.log('SQLEXEC opciones====>>>>', ins_sql, opciones)
 
       await db.sequelize.query(ins_sql, opciones)
         .then(async data => {
           console.log('=====Regresando datos SQLEXEC ======')
-          await res_send(res, data[0], broadcast);
+          res_send(res, data[0], broadcast);
+          return;
         })
         .catch(err => {
           console.log('No se pudo ejecutar ==', err)
@@ -1193,27 +1191,26 @@ exports.sql = async (req, res, callback) => {
 
       break
 
-
-
     case 'GENINDICES':
 
       opciones.mapToModel = true
       // se pasa el nombre de la tabla y si es posgres o MSSQL
       if (dialect == 'postgres')
-        ins_sql = `select * F_gen_indices('${dialect}','${nom_tab}') `
+        ins_sql = `select * P_gen_indices('${dialect}','${nom_tab}','${nom_vis}') `
       else
-        ins_sql = `select dbo.F_gen_indices('${dialect}','${nom_tab}') `
+        ins_sql = `execute P_gen_indices '${dialect}','${nom_tab}','${nom_vis}' `
 
-      db.sequelize.query(ins_sql, opciones)
+      await db.sequelize.query(ins_sql, opciones)
         .then(data => {
-          console.log('<========= f_gen_indices===>', data)
+          console.log('<========= P_gen_indices===>', data)
           const query = data[0][0].query
           const modelo = data[0][0].modelo
           db.sequelize.query(query)
             .then(async data => {
               console.log('<=========query GENERA INDICES=======>', data)
               //   this.genModel(nom_tab, db, dir_emp)
-              await res_send(res, query, broadcast)
+              await res_send(res, 'Se genero el indice '+nom_vis+' de la tabla '+nom_tab, broadcast);
+              return
 
             })
             .catch(err => {
@@ -1233,27 +1230,31 @@ exports.sql = async (req, res, callback) => {
       opciones.mapToModel = true
       // se pasa el dialecto (posgres o MSSQL) y nombre de la tabla y si es 
       if (dialect == 'postgres')
-        ins_sql = `select P_gen_vista('${dialect}','${nom_tab}') as query`
+        ins_sql = `select P_gen_vista('${dialect}','${nom_tab}','${nom_vis}') as query`
       else
-        ins_sql = `exec  P_gen_vista '${dialect}','${nom_tab}' `
+        ins_sql = `exec  P_gen_vista '${dialect}','${nom_tab}','${nom_vis}' `
 
-      db.sequelize.query(ins_sql, opciones)
-        .then(data => {
+      await db.sequelize.query(ins_sql, opciones)
+        .then(async data => {
           console.log('<========= P_gen_vistas_sql resultado ===>', data[0].length, data[0])
           for (let ren = 0; ren < data[0].length; ren++) { // genera tantas vistas como sea posible
             const query = data[0][ren].query;
 
             console.log('<========= P_gen_vistas_sql query===>', query)
 
-            db.sequelize.query(query, opciones)
-              .then(data => {
+            await db.sequelize.query(query, opciones)
+              .then(async data => {
                 console.log('<=========Vistas SQL Generada=======>', query)
+
               })
               .catch(err => {
                 console.log('No se pudo ejecutar ==', err)
                 writeHead(broadcast, 400, res, "query :" + ins_sql + ' SQL ERROR :' + err);
               });
           }
+
+           res_send(res, 'Se genero la vistas '+nom_vis, broadcast);
+          return
 
         })
         .catch(err => {
@@ -1271,7 +1272,8 @@ exports.sql = async (req, res, callback) => {
         .then(async (data) => {
 
           if (data == 'Ok') {
-            await res_send(res, 'Se genero tabla ' + nom_tab, broadcast);
+            res_send(res, 'Se genero tabla ' + nom_tab, broadcast);
+            return;
           }
           else {
             writeHead(broadcast, 400, res, "SQL ERROR " + res, { 'Content-Type': 'text/plain' });
@@ -1327,7 +1329,7 @@ exports.sql = async (req, res, callback) => {
         .then(async result => {
 
           if (result && result[0] && result[0][0] && result[0][0].length == 0) {  // no hay datos
-            await res_send(res, 'No data for report', broadcast)
+            res_send(res, 'No data for report', broadcast)
             return
           }
           console.log('JASPER dataView=', dataView)
@@ -1356,7 +1358,7 @@ exports.sql = async (req, res, callback) => {
             //})
             .then(async result => {
               console.log('=======GENERO reporte con JASPER ========')
-              await res_send(res, result.data, broadcast)
+              res_send(res, result.data, broadcast)
               return
             })
             .catch(err => {
@@ -1410,7 +1412,7 @@ async function res_send(res, data, broadcast) {
     return
   }
   // si es Axios  
-  console.log('=======res_send data Axios ============== ', res.id, res.client)
+  //console.log('=======res_send data Axios ============== ', res.id, res.client)
   res.send(data)
   return
 

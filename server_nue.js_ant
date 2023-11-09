@@ -65,8 +65,8 @@ require("./app/routes/siavcom.routes")(app);
 /////////////////////////////////////////////////////////////////////////////////////////
 // set port, listen for requests
 
-//const PORT = process.env.PORT || 38080;
 const PORT = process.env.PORT || 38080;
+//const PORT = process.env.PORT || 38081;
 
 
 //////////////////// Axios and socket Server /////////////////////////////////////
