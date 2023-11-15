@@ -428,9 +428,9 @@ exports.sql = async (req, res, callback) => {
 
             nom_campo = data[0][i].cam_dat.trim().toLowerCase(); // pasamos a minusculas
             tip_campo = data[0][i].tip_dat.toLowerCase().substring(0, 3);
-            val_defa = data[0][i].vue_dat ? data[0][i].vue_dat.trim() : ''
+            val_defa = data[0][i] ? data[0][i].vue_dat.trim() : ''
             // val_defa = data[0][i].vvu_dat.trim();  // valor vue
-            // console.log('Nombre del campo,tipo, valor=====>>>', nom_campo, tip_campo, val_defa)
+           // console.log('Nombre del campo=', nom_campo,',tipo=', tip_campo,'val_defa=', val_defa)
             if (nom_campo == 'timestamp') {
               sw_timestamp = true
               tip_campo = 'tsp'
@@ -607,7 +607,7 @@ exports.sql = async (req, res, callback) => {
 
           view.exp_indice = con_ind // Indice a utilizar
 
-          console.log(' Use nodata Vista ======>', view.nom_tab, 'Index=', view.exp_indice)
+          console.log(' Use nodata Vista ======>', view.nom_tab,'est_tabla=null', 'Index=', view.exp_indice)
           //console.log('===================================================================== ')
           // console.log('USENODATA con_ind ===>',con_ind)
 
@@ -1098,7 +1098,7 @@ exports.sql = async (req, res, callback) => {
       //console.log('SQLEXEC ins_sql====>>>>',ins_sql)
       opciones.mapToModel = true
       // opciones.dialectOptions={requestTimeout: 300000 }
-     //opciones.requestTimeout= 60000*2
+      //opciones.requestTimeout= 60000*2
 
       console.log('SQLEXEC opciones====>>>>', ins_sql, opciones)
 
@@ -1109,8 +1109,8 @@ exports.sql = async (req, res, callback) => {
           return;
         })
         .catch(err => {
-          console.log('No se pudo ejecutar ==', err)
-          writeHead(broadcast, 400, res, "", err)
+          console.log('SQLEXEC ERROR ==' + ins_sql, err)
+          writeHead(broadcast, 400, res, "SQLEXEC ERROR " + ins_sql)
 
         });
 
@@ -1209,7 +1209,7 @@ exports.sql = async (req, res, callback) => {
             .then(async data => {
               console.log('<=========query GENERA INDICES=======>', data)
               //   this.genModel(nom_tab, db, dir_emp)
-              await res_send(res, 'Se genero el indice '+nom_vis+' de la tabla '+nom_tab, broadcast);
+              await res_send(res, 'Se genero el indice ' + nom_vis + ' de la tabla ' + nom_tab, broadcast);
               return
 
             })
@@ -1253,7 +1253,7 @@ exports.sql = async (req, res, callback) => {
               });
           }
 
-           res_send(res, 'Se genero la vistas '+nom_vis, broadcast);
+          res_send(res, 'Se genero la vistas ' + nom_vis, broadcast);
           return
 
         })
@@ -1493,9 +1493,17 @@ async function writeHead(broadcast, num_err, res, men_err, error) {
 
   if (socket) {
     socket.emit('error', men_err)
-    if (res.client)
-      broadcast(false)
-    return
+    try {
+      if (res.client)
+        broadcast(false)
+
+      return
+    } catch {
+      res.writeHead(num_err, error)
+      res.send()
+      return 
+
+    }
   }
 
   //  res.writeHead(400, message, { 'Content-Type': 'text/plain' });

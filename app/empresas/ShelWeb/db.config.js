@@ -1,6 +1,6 @@
 module.exports = {
   host: "shelsql.freeddns.org",
-  database: "ShelWeb",
+  database: "SHEL",
   dialect: "mssql",
   port: 1466,
 
