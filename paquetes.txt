@@ -17,23 +17,23 @@
   "author": "Fernando Cuadras",
   "license": "ISC",
   "dependencies": {
-    "axios": "^1.6.2",
+    "axios": "^1.4.0",
     "body-parser": "^1.20.2",
     "cors": "^2.8.5",
-    "crypto-js": "^4.2.0",
-    "express": "^4.18.2",
-    "nodemon": "^3.0.1",
-    "npm": "^10.2.4",
-    "pg": "^8.11.3",
+    "crypto-js": "^4.0.0",
+    "express": "^4.17.1",
+    "nodemon": "^2.0.22",
+    "npm": "^7.14.0",
+    "pg": "^8.7.1",
     "pg-hstore": "^2.3.4",
     "pug": "^3.0.2",
-    "sequelize": "^6.35.1",
+    "sequelize": "^6.33.0",
     "socket.io": "^4.7.2",
-    "tedious": "^16.6.1",
-    "uuid": "^9.0.1"
+    "tedious": "^16.4.1",
+    "uuid": "^8.3.2"
   },
   "optionalDependencies": {
-    "bufferutil": "^4.0.8",
-    "utf-8-validate": "^6.0.3"
+    "bufferutil": "^4.0.7",
+    "utf-8-validate": "^5.0.10"
   }
 }

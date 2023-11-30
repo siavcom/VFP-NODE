@@ -221,16 +221,6 @@ exports.login = (req, res) => {
 
 /////////// comienzan los requerimientos a la base de datos /////////
 exports.sql = async (req, res, callback) => {
-  // funcion para quitar el error en MSSQL con las fechas 
-  Sequelize.DATE.prototype._stringify = function _stringify(date, options) {
-    date = this._applyTimezone(date, options);
-    // Z here means current timezone, _not_ UTC
-    // return date.format('YYYY-MM-DD HH:mm:ss.SSS Z');
-    // return date.format('YYYY-MM-DD HH:mm:ss.SSS');
-    return date.format('YYYY-MM-DD HH:mm');
-
-  };
-
 
   if (req.id_con)
     req.body = req
@@ -699,10 +689,9 @@ exports.sql = async (req, res, callback) => {
       }
       //      let insSql = 'INSERT INTO  ' + db[nom_tab].tableName + ' (' + campos + ') VALUES (?)'
 
-      let insSql = 'INSERT INTO  ' + db[nom_tab].tableName + ' (' + campos + ') VALUES (' + replacement + ')'
+      //let insSql = 'INSERT INTO  ' + db[nom_tab].tableName + ' (' + campos + ') VALUES (' + replacement + ')'
 
-
-      //      let insSql = 'INSERT INTO  ' + db[nom_tab].tableName + ' (' + campos + ') VALUES (' + valores + ')'
+      ins_sql = 'INSERT INTO  ' + db[nom_tab].tableName + ' (' + campos + ') VALUES (' + replacement + ')'
 
       datosEnviar.id = 0
       datosEnviar.key_pri = 0
@@ -717,7 +706,7 @@ exports.sql = async (req, res, callback) => {
       try {
         //await db.sequelize.query(insSql,values)
 
-        await db.sequelize.query(insSql, {
+        await db.sequelize.query(ins_sql, {
           bind: datosEnviar,
           type: QueryTypes.INSERT,
           returning: false,
@@ -822,33 +811,60 @@ exports.sql = async (req, res, callback) => {
       delete datos['val_vista'];
 
 
-      console.log('UPDATE datos==========>', datos)
+      // console.log('UPDATE datos==========>', datos)
+      ins_sql = 'UPDATE ' + db[nom_tab].tableName
+      let com = ' SET '
 
       for (const campo in datos) {  // Checamos todos los campos buffer
+        let comillas = ''
         //campo!='timestamp' &&//Buffer.isBuffer(datos[campo])
         console.log('UPDATE campo =', campo, 'Type=', datos[campo].type)
 
-
         if (!socket && datos[campo].type && datos[campo].type == 'Buffer') {
-          console.log('UPDATE campo buffer axios ===>>>', campo)
           const buffer = datos[campo]
           datos[campo] = Buffer.from(buffer)
+
+          if (campo == 'timestamp') {
+            console.log('UPDATE campo buffer axios ===>>>', campo, datos[campo],
+              'buffer=', Buffer.from(datos[campo], 'base64').toString('utf-8'))
+
+            let timestamp = '0x'
+            for (let i = 0; i < 8; i++) {
+              let ele = String.fromCharCode(datos[campo].data[i])
+              ele = ele.slice(2)
+              timestamp = timestamp + ele
+
+            }
+            datos[campo] = `CAST('${timestamp}' AS TIMESTAMP)`;
+
+            console.log('=======UPDATE timestamp ===>>> campo=', campo, datos[campo])
+          }
+
         } else
           if (typeof datos[campo] == 'object') {
 
             const arrBuffer = new ArrayBuffer(datos[campo]);
             datos[campo] = Buffer.from(arrBuffer);
 
-            console.log('=======0UPDATE campo buffer socket ===>>>', datos[campo])
 
             //    const buffer =new DataView(datos[campo])  // view.getUint8())    //new Uint8Array( datos[campo])
             //    datos[campo] =buffer.getUint8()       //new Uint8Array(datos[buffer]);
 
           }
 
-        console.log('UPDATE campo=', campo, 'Type=', typeof datos[campo])
-      }
+        // console.log('UPDATE campo=', campo, 'Type=', typeof datos[campo])
+        if (typeof datos[campo] == 'string')
+          if (campo != 'timestamp')
+            comillas = "'"
+          else
+            datos[campo] = datos[campo].toString()
 
+        ins_sql = ins_sql + com + ` ${campo}=${comillas + datos[campo] + comillas} `
+        com = ','
+
+
+      }
+      ins_sql = ins_sql + ' WHERE key_pri=' + key_pri.toString()
       // No es Postgres . Cambiamos el TimeStamp to Buffer para comparar actualizacion
 
       /*
@@ -869,7 +885,48 @@ exports.sql = async (req, res, callback) => {
 
        */
 
-      console.log('===============(   UPDATE     )    datos=', datos)
+      console.log('===============(   UPDATE     ) ins_sql=', ins_sql, 'datos=', datos)
+      try {
+        await db.sequelize.query(ins_sql, {
+          // bind: datosEnviar,
+          type: QueryTypes.UPDATE,
+          returning: false,
+        }
+        )
+
+        db[nom_tab].findAll(
+          {
+            attributes: ['timestamp', 'key_pri'],
+            where: { key_pri: key_pri },
+            raw: true,
+          })
+          .then(async datos => {  // envia el timestamp     aqui voy checar demas findAll
+            /*
+            if (typeof datos[0].timestamp != 'number') {  // No es Postgres
+              // MSSQL buffer
+              console.log('UPDATE timestamp=>>',datos[0].timestamp)
+              const buffer = datos[0].timestamp
+              datos[0].timestamp = Buffer.from(buffer);
+      
+              // base64 
+              //Buffer.from(binaryPhoto).toString('base64')
+            }
+            */
+            console.log('UPDATE Datos actualizados =======>>>>', datos[0])
+
+
+            await res_send(res, datos[0], broadcast)
+
+          })
+
+      }
+      catch (err) {     // Error al leer el TimeStamp
+        writeHead(broadcast, 400, res, 'Update error', err)
+        console.error('Update Error', err)
+        // transaction.rollback();
+
+      };
+      return
       db[nom_tab].update(datos, {
         where: { key_pri: key_pri }
       })
