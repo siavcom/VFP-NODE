@@ -676,30 +676,38 @@ exports.sql = async (req, res, callback) => {
       let replacement = ''
       for (const campo in datos) {
         //  convirtiendo buffer a enviar
-        if (datos[campo].type && datos[campo].type == 'Buffer') {
-          console.log('UPDATE campo buffer ===>>>', campo)
-          const buffer = datos[campo]
-          datos[campo] = Buffer.from(buffer)
+        if (campo != 'key_pri' &&
+          campo != 'tie_cre' &&
+          campo != 'tie_uac' &&
+          campo != 'usu_usu' &&
+          campo != 'usu_cre' &&
+          campo != 'timestamp'
+        ) {
+          if (datos[campo].type && datos[campo].type == 'Buffer') {
+            console.log('UPDATE campo buffer ===>>>', campo)
+            const buffer = datos[campo]
+            datos[campo] = Buffer.from(buffer)
+          }
+
+          datosEnviar[campo] = datos[campo]
+
+          campos = campos + coma + campo
+          replacement = replacement + coma + '$' + campo
+          coma = ','
+          /*    Genera valores de campos
+          let comillas = ''
+          if (typeof datos[campo] == 'string')
+            comillas = "'"
+  
+                    const valor = `${comillas}${datos[campo]}${comillas}`
+                    valores = valores + coma + `${valor}`
+         */
         }
-
-        datosEnviar[campo] = datos[campo]
-
-        campos = campos + coma + campo
-        replacement = replacement + coma + '$' + campo
-        coma = ','
-        /*    Genera valores de campos
-        let comillas = ''
-        if (typeof datos[campo] == 'string')
-          comillas = "'"
-
-                  const valor = `${comillas}${datos[campo]}${comillas}`
-                  valores = valores + coma + `${valor}`
-       */
-
       }
       //      let insSql = 'INSERT INTO  ' + db[nom_tab].tableName + ' (' + campos + ') VALUES (?)'
 
       let insSql = 'INSERT INTO  ' + db[nom_tab].tableName + ' (' + campos + ') VALUES (' + replacement + ')'
+
 
 
       //      let insSql = 'INSERT INTO  ' + db[nom_tab].tableName + ' (' + campos + ') VALUES (' + valores + ')'
