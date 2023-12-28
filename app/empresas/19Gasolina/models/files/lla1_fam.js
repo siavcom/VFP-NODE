@@ -1,0 +1,6 @@
+module.exports = function(sequelize, DataTypes) {
+  return sequelize.define('lla1_fam', {
+'num_fam': {type: DataTypes.SMALLINT,allowNull: false,defaultValue: '0',comment: 'NUMERO DE FAMILIA' },'cla_fam': {type: DataTypes.CHAR(5),allowNull: false,defaultValue: ' ',comment: 'CLAVE' },'des_fam': {type: DataTypes.CHAR(20),allowNull: false,defaultValue: ' ',comment: 'DESCRIPCION DE FAMILIA' },'esw_fam': {type: DataTypes.SMALLINT,allowNull: false,comment: 'ESTATUS WEB 1=SI' },'usu_usu': {field: 'USU_USU',type: DataTypes.SMALLINT,comment: 'USUARIO' },'usu_cre': {field: 'USU_CRE',type: DataTypes.SMALLINT,comment: 'USUARIO CREADOR' },'tie_uac': {field: 'TIE_UAC',type: DataTypes.DATE,comment: 'FECHA DE LA ULTIMA ACTUALIZACION' },'tie_cre': {field: 'TIE_CRE',type: DataTypes.DATE,comment: 'TIEMPO DE CREACION' },'timestamp': {type: DataTypes.BLOB('tiny'),allowNull: true,comment: 'MARCA ULTIMA ACTUALIZACION' },'key_pri': {type: DataTypes.INTEGER,allowNull: false,defaultValue: '0',comment: 'LLAVE PRIMARIA PARA LA ACTUALIZACION DE VISTAS', primaryKey: true },createdAt: {field: 'tie_cre',type: DataTypes.DATE,},
+updatedAt: {field: 'tie_uac',type: DataTypes.DATE,} 
+  }, { tableName: 'man_comefam'});
+};

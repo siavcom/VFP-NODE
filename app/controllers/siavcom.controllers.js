@@ -877,7 +877,7 @@ exports.sql = async (req, res, callback) => {
 
        */
 
-      console.log('===============(   UPDATE     )    datos=', datos)
+      console.log('===============(   UPDATE     )    datos=', datos, 'key_pri=', key_pri)
       db[nom_tab].update(datos, {
         where: { key_pri: key_pri }
       })
@@ -1346,11 +1346,13 @@ exports.sql = async (req, res, callback) => {
       db.sequelize.query(ins_sql, opciones)
         .then(async result => {
 
-          if (result && result[0] && result[0][0] && result[0][0].length == 0) {  // no hay datos
+          if (!result || !result[0] || !result[0][0] ||
+            result[0].length == 0 || result[0][0].length == 0) {  // no hay datos
             res_send(res, 'No data for report', broadcast)
             return
           }
-          console.log('JASPER dataView=', dataView)
+
+          console.log('JASPER result[0]=', result[0])
           for (const campo in dataView) {
             result[0][0][campo] = dataView[campo]
           }

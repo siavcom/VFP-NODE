@@ -1,0 +1,6 @@
+module.exports = function(sequelize, DataTypes) {
+  return sequelize.define('index1_reportfields_db', {
+'view_report': {type: DataTypes.CHAR(128),allowNull: false,defaultValue: ' ',comment: 'View' },'pos_report': {type: DataTypes.SMALLINT,allowNull: false,defaultValue: '0',comment: 'posicion' },'cam_dat': {type: DataTypes.CHAR(256),allowNull: false,defaultValue: ' ',comment: 'Campo' },'header_report': {type: DataTypes.CHAR(128),allowNull: false,defaultValue: ' ',comment: 'Titulo del header' },'yes_report': {type: DataTypes.SMALLINT,allowNull: false,comment: 'Se incluye en el reporte' },'usu_usu': {field: 'usu_usu',type: DataTypes.INTEGER,comment: '' },'tie_uac': {field: 'tie_uac',type: DataTypes.DATE,comment: '' },'tie_cre': {field: 'tie_cre',type: DataTypes.DATE,comment: '' },'usu_cre': {field: 'usu_cre',type: DataTypes.SMALLINT,comment: '' },'timestamp': {type: DataTypes.BLOB('tiny'),allowNull: true,comment: '' },'key_pri': {type: DataTypes.INTEGER,allowNull: false,defaultValue: '0',comment: '', primaryKey: true },createdAt: {field: 'tie_cre',type: DataTypes.DATE,},
+updatedAt: {field: 'tie_uac',type: DataTypes.DATE,} 
+  }, { tableName: 'man_reportfields_db'});
+};
