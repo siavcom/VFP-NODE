@@ -339,6 +339,9 @@ exports.sql = async (req, res, callback) => {
   nom_vis = nom_vis.toLowerCase()
   nom_vis = nom_vis.trim()
 
+
+
+
   //if (req.body.nom_vis) nom_vis = req.body.nom_vis.toLowerCase();  // Nombre de la vista indice a utilizar 
 
   // nom_vis = nom_vis.replace('vi_', '')
@@ -357,6 +360,22 @@ exports.sql = async (req, res, callback) => {
   //console.log(llamada);
 
   tip_lla = tip_lla.toUpperCase()
+
+
+  if ((tip_lla == 'USE' ||
+    // tip_lla == 'USENODATA' ||
+    tip_lla == 'INSERT' ||
+    tip_lla == 'UPDATE' ||
+    tip_lla == 'DELETE'
+  ) &&
+    !db[nom_tab]) {
+
+
+    let men_err = 'Not exist sequelize model of ' + nom_tab
+    console.error('Insert  Error', men_err)
+    writeHead(broadcast, 400, res, men_err, error);
+    return
+  }
 
   switch (tip_lla) {
     case 'CHECK':
@@ -705,7 +724,6 @@ exports.sql = async (req, res, callback) => {
         }
       }
       //      let insSql = 'INSERT INTO  ' + db[nom_tab].tableName + ' (' + campos + ') VALUES (?)'
-
       let insSql = 'INSERT INTO  ' + db[nom_tab].tableName + ' (' + campos + ') VALUES (' + replacement + ')'
 
 
