@@ -47,7 +47,7 @@ exports.login = (req, res) => {
   const socket = res.handshake.address ? res : false
   console.log('===========login Socket===========', socket.handshake.address)
 
-  console.log('siavcom.controlers login=>>>>>>>', JSON.parse(req))
+  //console.log('siavcom.controlers login=>>>>>>>', JSON.parse(req))
   let obj_json = {}
   if (req && req.query && req.query.json)
     obj_json = JSON.parse(req.query.json)
@@ -1217,7 +1217,8 @@ exports.sql = async (req, res, callback) => {
 
           console.log('Error al ejecutar el query =====> ', query)
           //            writeHead(broadcast,res, "Error al ejecutar el query :" + query, err)
-          writeHead(broadcast, 400, res, "", err)
+          //          writeHead(broadcast, 400, res, "", err)
+          writeHead(broadcast, 400, res, "query :" + query + ' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
 
           //      }
 

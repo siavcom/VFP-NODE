@@ -9,5 +9,5 @@ module.exports = function(sequelize, DataTypes) {
 'key_pri': {type: DataTypes.INTEGER,allowNull: false,defaultValue: '0',comment: 'LLAVE PRIMARIA PARA LA ACTUALIZACION DE VISTAS', primaryKey: true },
 createdAt: {field: 'tie_cre',type: DataTypes.DATE,},
 updatedAt: {field: 'tie_uac',type: DataTypes.DATE,} 
-  }, { tableName: 'man_cometab'});
+  }, { tableName: 'cometab'});
 };

@@ -14,12 +14,11 @@ module.exports = function(sequelize, DataTypes) {
 'tmo_vis': {type: DataTypes.CHAR(15),allowNull: false,defaultValue: ' ',comment: 'TMOVIS' },
 'vre_vis': {type: DataTypes.CHAR(1),allowNull: false,defaultValue: ' ',comment: 'VISTA REMOTA EN LA BASE DE DATOS' },
 'wjs_vis': {type: DataTypes.STRING(512),allowNull: false,comment: 'Condicion Where para JavaScript ejemplo: con_nom=${m.cod_nom} and left(cop_nom,1)=${m.cop_nom}' },
-'timestamp': {type: DataTypes.BLOB('tiny'),allowNull: true,comment: 'TIMESTAMP' },
 'key_pri': {type: DataTypes.INTEGER,allowNull: false,defaultValue: '0',comment: 'LLAVE PRIMARIA PARA LA ACTUALIZACION DE VISTAS', primaryKey: true },
 
 
 id: {field: 'key_pri',type: DataTypes.INTEGER,},
 createdAt: {field: 'tie_cre',type: DataTypes.DATE,},
 updatedAt: {field: 'tie_uac',type: DataTypes.DATE,} 
-  }, { tableName: 'man_comevis'});
+  }, { tableName: 'comevis'});
 };
