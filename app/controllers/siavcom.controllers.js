@@ -1524,34 +1524,53 @@ async function writeHead(broadcast, num_err, res, men_err, error) {
   //}
 
   //var message = Buffer.from(men_err, 'utf-8').toString();
-  console.error('BackEnd error message ==========>', men_err, '<=============')
   // remplazo de rt/lf
-  //  men_err=men_err.replace(/(\r\n|\n|\r)/gm, "")
+  //men_err = men_err.replace(/(\r\n|\n|\r)/gm, "")
+  let messageError = ''
+  for (let I = 0; I < men_err.length; I++) {
+
+    if (men_err[I].charCodeAt() > 0 && men_err[I].charCodeAt() < 256)
+      messageError = messageError + men_err[I]
+
+  }
+
+  console.error('BackEnd error messageError ==========>', messageError, 'num_err=', num_err, '<=============')
 
   const socket = res.handshake ? res : false
 
   if (socket) {
-    socket.emit('error', men_err)
+    socket.emit('error', messageError)
     try {
       if (res.client)
         broadcast(false)
 
       return
     } catch {
-      res.writeHead(num_err, error)
-      res.send()
+      res.status(num_err).send(messageError);
+      //     res.writeHead(num_err, error)
+      //     res.send()
       return
 
     }
   }
 
   //  res.writeHead(400, message, { 'Content-Type': 'text/plain' });
+
   try {
-    res.writeHead(num_err, men_err, { 'Content-Type': 'text/plain' })
-    res.send()
+
+
+    res.status(num_err).send(messageError);
+    //res.writeHead(num_err)
+    //res.end(messageError)
+
+    //res.writeHead(num_err, messageError, { 'Content-Type': 'text/plain' })
+    // res.send()
   } catch (error) {
-    res.writeHead(num_err, error)
-    res.send()
+    console.error('res.writeHead error', error, 'num_err', num_err, 'men_err', men_err)
+    res.status(num_err).send(error);
+
+    // res.writeHead(num_err, error, { 'Content-Type': 'text/plain' })
+    // res.send()
 
   }
 
