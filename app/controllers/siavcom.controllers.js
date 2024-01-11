@@ -440,6 +440,7 @@ exports.sql = async (req, res, callback) => {
           // Definimos nuestra vista y asignamos el nombre dela tabla de mantenimiento
           const view = {
             tip_obj: data[0][0].tip_obj,
+
             nom_tab: data[0][0].vac_vis,      // vista de actualizacion (mantenimiento) (anterior nom_tab)
             exp_where: data[0][0].wjs_vis,     //  wjs_vis=where javascript  sql_vis,   condicion where 
             exp_indice: '',                    // expresión  del indice
@@ -458,6 +459,7 @@ exports.sql = async (req, res, callback) => {
             nom_campo = data[0][i].cam_dat.trim().toLowerCase(); // pasamos a minusculas
             tip_campo = data[0][i].tip_dat.toLowerCase().substring(0, 3);
             val_defa = data[0][i] ? data[0][i].vue_dat.trim() : ''
+
             // val_defa = data[0][i].vvu_dat.trim();  // valor vue
             // console.log('Nombre del campo=', nom_campo,',tipo=', tip_campo,'val_defa=', val_defa)
             if (nom_campo == 'timestamp') {
@@ -534,7 +536,8 @@ exports.sql = async (req, res, callback) => {
               des_cam: data[0][i].ref_dat.trim(),  // Descripcion del campo
               tip_cam: tip_campo,   // tipo de dato
               val_cam: val_campo, //data[0][i].val_dat.trim()    // Valor al insertar campo en blanco
-              val_def: val_defa
+              val_def: val_defa,
+              lon_dat: data[0][i].lon_dat
             }
 
             if (nom_campo != 'usu_usu')
@@ -1367,7 +1370,7 @@ exports.sql = async (req, res, callback) => {
 
           if (!result || !result[0] || !result[0][0] ||
             result[0].length == 0 || result[0][0].length == 0) {  // no hay datos
-            res_send(res, 'No data for report', broadcast)
+            writeHead(broadcast, 400, 'No hay datos ', "")
             return
           }
 

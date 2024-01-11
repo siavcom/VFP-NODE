@@ -110,12 +110,12 @@ io.on('connection', async (socket) => {
     socket.handshake.auth.pass) {
 
     let req = JSON.stringify(socket.handshake.auth)
-//    sqlServer.login(req, socket)
+    //    sqlServer.login(req, socket)
   } else {
 
 
     if (!socket.handshake.auth.id_con) { // no hay id_con
-      consoloe.log('=========socket id invalid ==========', socket.handshake.auth)
+      console.log('=========socket id invalid ==========', socket.handshake.auth)
       socket.disconnect()
     }
 
@@ -133,7 +133,7 @@ io.on('connection', async (socket) => {
     sqlServer.login(req, socket)
     //    const obj_json = JSON.parse(msg)
     console.log('============ login Directo ========= ');
- //   io.emit('broadcast', res);
+    //   io.emit('broadcast', res);
   });
 
   // mensajes sql
