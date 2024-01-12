@@ -43,6 +43,9 @@ Sequelize.DATE.prototype._stringify = function _stringify(date, options) {
 
 exports.login = (req, res) => {
 
+  // const broadcast = req.body.broadcast //? req.body.broadcast : callback; // busca el broadcast
+
+
   // asignamos socket si existe
   const socket = res.handshake.address ? res : false
   console.log('===========login Socket===========', socket.handshake.address)
@@ -84,7 +87,9 @@ exports.login = (req, res) => {
     //console.log('Lee archivo de configuracion====>>>',options)
 
     console.log('No existe archivo de definicion empresa ', nom_emp)
-    writeHead(false, 408, res, nom_emp + ' Company definition invalid ')// , { 'Content-Type': 'text/plain' });
+    writeHead(broadcast, 408, res, nom_emp + ' Company definition invalid ') //, { 'Content-Type': 'text/plain' });
+
+    //  writeHead(false, 408, res, nom_emp + ' Company definition invalid ')// , { 'Content-Type': 'text/plain' });
 
     return
   }
@@ -238,6 +243,9 @@ exports.sql = async (req, res, callback) => {
 
   // asignamos socket si existe
   const socket = res.handshake ? res : false
+  const broadcast = req.body.broadcast ? req.body.broadcast : callback; // busca el broadcast
+
+
   if (socket)
     console.log('===========sql Socket=========== req=', req)
 
@@ -253,7 +261,6 @@ exports.sql = async (req, res, callback) => {
 
 
   const { id_con } = req.body; // Id de conexion   es lo mismo id_con=req.body.id_con
-  const broadcast = req.body.broadcast ? req.body.broadcast : callback; // busca el broadcast
 
 
   //const jrxml = req.body.jrxml?req.body.jrxml:''
