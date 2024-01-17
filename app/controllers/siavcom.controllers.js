@@ -41,13 +41,18 @@ Sequelize.DATE.prototype._stringify = function _stringify(date, options) {
 
 
 
-exports.login = (req, res) => {
+exports.login = (req, res, callback) => {
 
   // const broadcast = req.body.broadcast //? req.body.broadcast : callback; // busca el broadcast
 
 
   // asignamos socket si existe
-  const socket = res.handshake.address ? res : false
+
+  const socket = res.handshake ? res : false
+  // const broadcast = req.body.broadcast ? req.body.broadcast : callback; // busca el broadcast
+
+
+  //  const socket = res.handshake.address ? res : false
   console.log('===========login Socket===========', socket.handshake.address)
 
   //console.log('siavcom.controlers login=>>>>>>>', JSON.parse(req))
@@ -87,7 +92,7 @@ exports.login = (req, res) => {
     //console.log('Lee archivo de configuracion====>>>',options)
 
     console.log('No existe archivo de definicion empresa ', nom_emp)
-    writeHead(broadcast, 408, res, nom_emp + ' Company definition invalid ') //, { 'Content-Type': 'text/plain' });
+    socket.emit('desconecta', nom_emp + ' Company definition invalid ')
 
     //  writeHead(false, 408, res, nom_emp + ' Company definition invalid ')// , { 'Content-Type': 'text/plain' });
 

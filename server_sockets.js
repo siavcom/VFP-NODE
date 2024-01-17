@@ -129,8 +129,8 @@ io.on('connection', async (socket) => {
   });
 
 
-  socket.on('login', (req) => {
-    sqlServer.login(req, socket)
+  socket.on('login', (req, callback) => {
+    sqlServer.login(req, socket, callback)
     //    const obj_json = JSON.parse(msg)
     console.log('============ login Directo ========= ');
     //   io.emit('broadcast', res);
