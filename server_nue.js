@@ -65,8 +65,8 @@ require("./app/routes/siavcom.routes")(app);
 /////////////////////////////////////////////////////////////////////////////////////////
 // set port, listen for requests
 
-//const PORT = process.env.PORT || 38080;
 const PORT = process.env.PORT || 38080;
+//const PORT = process.env.PORT || 38081;
 
 
 //////////////////// Axios and socket Server /////////////////////////////////////
@@ -91,10 +91,7 @@ io.on('connection', async (socket) => {
 
   //  console.log('1= Socket connected ready headers=', socket.handshake.headers);
   //  console.log('2= Socket address=', socket.handshake.address);
-  console.log('1= Socket auth=', socket.handshake.auth)
-  for (const id_tok in socket.handshake.auth) {
-    console.log(id_tok, socket.handshake.auth[id_tok])
-  }
+  console.log('3= Socket auth=', socket.handshake.auth)
 
 
   /*
@@ -111,14 +108,14 @@ io.on('connection', async (socket) => {
   if (socket.handshake.auth.nom_emp &&
     socket.handshake.auth.user &&
     socket.handshake.auth.pass) {
-    console.log('2 )========= socket connected ==========', socket.handshake.auth)
+
     let req = JSON.stringify(socket.handshake.auth)
     //    sqlServer.login(req, socket)
   } else {
 
 
     if (!socket.handshake.auth.id_con) { // no hay id_con
-      console.log('99) =========socket id invalid ==========', socket.handshake.auth)
+      console.log('=========socket id invalid ==========', socket.handshake.auth)
       socket.disconnect()
     }
 
@@ -132,8 +129,8 @@ io.on('connection', async (socket) => {
   });
 
 
-  socket.on('login', (req) => {
-    sqlServer.login(req, socket)
+  socket.on('login', (req, callback) => {
+    sqlServer.login(req, socket, callback)
     //    const obj_json = JSON.parse(msg)
     console.log('============ login Directo ========= ');
     //   io.emit('broadcast', res);

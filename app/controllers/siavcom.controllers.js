@@ -1549,7 +1549,6 @@ async function writeHead(broadcast, num_err, res, men_err, error) {
 
   }
 
-  console.error('BackEnd error messageError ==========>', messageError, 'num_err=', num_err, '<=============')
 
   const socket = res.handshake ? res : false
 
@@ -1561,7 +1560,9 @@ async function writeHead(broadcast, num_err, res, men_err, error) {
 
       return
     } catch {
+      
       res.status(num_err).send(messageError);
+
       //     res.writeHead(num_err, error)
       //     res.send()
       return
@@ -1573,8 +1574,17 @@ async function writeHead(broadcast, num_err, res, men_err, error) {
 
   try {
 
+    console.error('BackEnd error messageError ==========>', messageError, 'num_err=', num_err, '<=============')
+
+    // 5 Febrero 2024
+  //  res.statusMessage =messageError
+  //  res.status(num_err).end()
+
 
     res.status(num_err).send(messageError);
+   
+   
+   
     //res.writeHead(num_err)
     //res.end(messageError)
 
