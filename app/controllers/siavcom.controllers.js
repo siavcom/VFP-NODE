@@ -412,6 +412,7 @@ exports.sql = async (req, res, callback) => {
       } else {
         console.error('No existe sequelize model', nom_tab)
         writeHead(broadcast, 400, res, "Don't exists sequelize model " + nom_tab)//, { 'Content-Type': 'text/plain' });
+        return
       }
       break;
 
@@ -800,6 +801,7 @@ exports.sql = async (req, res, callback) => {
         let men_err = 'Insert error ' + error
         console.error('Insert  Error', men_err)// transaction.rollback();
         writeHead(broadcast, 400, res, men_err, error);
+        return;
 
 
 
@@ -952,6 +954,7 @@ exports.sql = async (req, res, callback) => {
             .catch(err => {     // Error al leer el TimeStamp
               writeHead(broadcast, 400, res, 'Update error', err)
               console.error('Update Error', err)
+              return
               // transaction.rollback();
 
             });
@@ -962,6 +965,7 @@ exports.sql = async (req, res, callback) => {
           console.error('Update SQL error=>> ', error)
 
           writeHead(broadcast, 400, res, 'Update Error', error)
+          return
 
           //transaction.rollback();
 
@@ -1019,6 +1023,7 @@ exports.sql = async (req, res, callback) => {
         .catch(err => {
           console.log('DELETE error===>', err)
           writeHead(broadcast, 400, res, err.message);
+          return;
         });
 
       break;
@@ -1139,6 +1144,7 @@ exports.sql = async (req, res, callback) => {
         .catch(err => {
           console.log('No se pudo ejecutar ==', err)
           writeHead(broadcast, 400, res, " ERROR " + ins_sql);
+          return 
         });
 
       break;
@@ -1162,6 +1168,7 @@ exports.sql = async (req, res, callback) => {
         .catch(err => {
           console.log('SQLEXEC ERROR ==' + ins_sql, err)
           writeHead(broadcast, 400, res, "SQLEXEC ERROR " + ins_sql)
+          return
 
         });
 
@@ -1274,6 +1281,7 @@ exports.sql = async (req, res, callback) => {
         .catch(err => {
           console.log('No se pudo ejecutar ==', err)
           writeHead(broadcast, 400, res, "query :" + ins_sql + ' SQL ERROR :' + err);
+          return
         });
 
       break;
@@ -1289,7 +1297,9 @@ exports.sql = async (req, res, callback) => {
       await db.sequelize.query(ins_sql, opciones)
         .then(async data => {
           console.log('<========= P_gen_vistas_sql resultado ===>', data[0].length, data[0])
-          for (let ren = 0; ren < data[0].length; ren++) { // genera tantas vistas como sea posible
+          let sw_err=false
+          for (let ren = 0; ren < data[0].length && !sw_err; ren++) { // genera tantas vistas como sea posible
+          
             const query = data[0][ren].query;
 
             console.log('<========= P_gen_vistas_sql query===>', query)
@@ -1300,18 +1310,24 @@ exports.sql = async (req, res, callback) => {
 
               })
               .catch(err => {
-                console.log('No se pudo ejecutar ==', err)
+                console.log('No se pudo ejecutar 1==', err)
                 writeHead(broadcast, 400, res, "query :" + ins_sql + ' SQL ERROR :' + err);
+                console.log('Fin errror 1==')
+                sw_err=true
+                
+                return
               });
           }
-
+          if (sw_err) return
           res_send(res, 'Se genero la vistas ' + nom_vis, broadcast);
           return
 
         })
         .catch(err => {
-          console.log('No se pudo ejecutar ==', err)
+          console.log('No se pudo ejecutar 2 ==', err)
           writeHead(broadcast, 400, res, "SQL ERROR " + ins_sql);
+          console.log('Fin errror 2==')
+          return;
         });
 
       break;
