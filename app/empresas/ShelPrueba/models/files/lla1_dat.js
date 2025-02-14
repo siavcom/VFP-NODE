@@ -12,7 +12,7 @@ module.exports = function(sequelize, DataTypes) {
 'sou_dat': {type: DataTypes.TEXT,allowNull: true,comment: 'VALORES PARA LLENADO DE COMBOS' },
 'nom_tab': {type: DataTypes.CHAR(64),allowNull: false,defaultValue: ' ',comment: 'NOMBRE DE LA TABLA' },
 'con_dat': {type: DataTypes.SMALLINT,allowNull: false,defaultValue: '0',comment: 'NUMERO CONSECUTIVO' },
-'vue_dat': {type: DataTypes.CHAR(254),allowNull: false,defaultValue: ' ',comment: 'VALOR DEFAULT TYPESCRIPT PARA VUE' },
+'vue_dat': {type: DataTypes.STRING(1024),allowNull: false,defaultValue: ' ',comment: 'VALOR DEFAULT TYPESCRIPT PARA VUE' },
 'key_pri': {type: DataTypes.INTEGER,allowNull: false,defaultValue: '0',comment: 'LLAVE PRIMARIA PARA LA ACTUALIZACION DE VISTAS', primaryKey: true },
 createdAt: {field: 'tie_cre',type: DataTypes.DATE,},
 updatedAt: {field: 'tie_uac',type: DataTypes.DATE,} 

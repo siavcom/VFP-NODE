@@ -6,8 +6,10 @@ module.exports = {
 
   dialectOptions: {
     options: {
-      requestTimeout: 300000
+      requestTimeout: 300000,
+      useUTC: true, // No quitarlo para que no convierta la fecha al capturar
     }
+    timezone: '-01:00' // for writing to database
   },
 
   pool: {

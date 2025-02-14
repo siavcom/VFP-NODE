@@ -468,14 +468,15 @@ exports.sql = async (req, res, callback) => {
           var sw_timestamp = false
           //  Generamos la estructura de la tabla en base de los datos traidos
           for (let i in data[0]) {
-
+           // console.log('Nombre del campo=', nom_campo,',tipo=', tip_campo,'val_defa=', val_defa)
             nom_campo = data[0][i].cam_dat.trim().toLowerCase(); // pasamos a minusculas
             tip_campo = data[0][i].tip_dat.toLowerCase().substring(0, 3);
-            val_defa = data[0][i] ? data[0][i].vue_dat.trim() : ''
+            val_defa = data[0][i].vue_dat ? data[0][i].vue_dat.trim() : ''
+            des_campo = !data[0][i].ref_dat ||data[0][i].ref_dat==null ? ' ':data[0][i].ref_dat.trim() ,  // Descripcion del campo
 
             // val_defa = data[0][i].vvu_dat.trim();  // valor vue
-            // console.log('Nombre del campo=', nom_campo,',tipo=', tip_campo,'val_defa=', val_defa)
-            if (nom_campo == 'timestamp') {
+             console.log('Nombre del campo=', nom_campo,',tipo=', tip_campo,'val_defa=', val_defa)
+            if (nom_campo == 'timestamp'  && tip_campo!='int' ) { //  && tip_campo!='int'  Es row source
               sw_timestamp = true
               tip_campo = 'tsp'
             }
@@ -546,7 +547,8 @@ exports.sql = async (req, res, callback) => {
 
             // asignamos los valores a la estructura del campo
             const est_campo = {
-              des_cam: data[0][i].ref_dat.trim(),  // Descripcion del campo
+            
+              des_cam: des_campo ,  // Descripcion del campo
               tip_cam: tip_campo,   // tipo de dato
               val_cam: val_campo, //data[0][i].val_dat.trim()    // Valor al insertar campo en blanco
               val_def: val_defa,
@@ -1398,7 +1400,7 @@ exports.sql = async (req, res, callback) => {
 
           if (!result || !result[0] || !result[0][0] ||
             result[0].length == 0 || result[0][0].length == 0) {  // no hay datos
-            writeHead(broadcast, 400, 'No hay datos ', "")
+            writeHead(broadcast, 400, res, "No hay datos para generar el reporte");
             return
           }
 
@@ -1432,8 +1434,8 @@ exports.sql = async (req, res, callback) => {
               return
             })
             .catch(err => {
-              console.log('Jasper Error =====', err.response.statusText)
-              const men_err = err.response.statusText
+              console.log('Jasper Error =====', err)
+              //const men_err = err.response.statusText
               writeHead(broadcast, 400, res, "Error :", err)
               return
             })
@@ -1590,15 +1592,16 @@ async function writeHead(broadcast, num_err, res, men_err, error) {
 
   try {
 
-    console.error('BackEnd error messageError ==========>', messageError, 'num_err=', num_err, '<=============')
+    console.error('BackEnd error messageError ==========>', messageError, 'and num_err=', num_err, '<=============')
 
     // 5 Febrero 2024
   //  res.statusMessage =messageError
   //  res.status(num_err).end()
 
-
-    res.status(num_err).send(messageError);
-   
+    if (res.status)
+       res.status(num_err).send(messageError);
+   else
+      res.writeHead(num_err).end()
    
    
     //res.writeHead(num_err)
@@ -1608,7 +1611,10 @@ async function writeHead(broadcast, num_err, res, men_err, error) {
     // res.send()
   } catch (error) {
     console.error('res.writeHead error', error, 'num_err', num_err, 'men_err', men_err)
-    res.status(num_err).send(error);
+    if (res.status)
+       res.status(num_err).send(error);
+   else
+      res.writeHead(num_err).end()
 
     // res.writeHead(num_err, error, { 'Content-Type': 'text/plain' })
     // res.send()

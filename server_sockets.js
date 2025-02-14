@@ -7,7 +7,7 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 
 const app = express();
-
+app.use(bodyParser.json({limit: '16000kb'}));  // maximo de tamaño de datos a transferir
 
 /*
 var corsOptions = {
@@ -66,7 +66,7 @@ require("./app/routes/siavcom.routes")(app);
 // set port, listen for requests
 
 //const PORT = process.env.PORT || 38080;
-const PORT = process.env.PORT || 38081;
+const PORT = process.env.PORT || 38080;
 
 
 //////////////////// Axios and socket Server /////////////////////////////////////
