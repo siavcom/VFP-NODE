@@ -1,5 +1,12 @@
 WebSiavcom
 package-lock.json
 node_modules/
-app/empresas/*
-!app/empresas/web-ones
+!app/empresas 						# allow Git to look inside this folder
+app/empresas/*						# but ignore everything it contains
+!app/empresas/web-ones				# allow Git to look inside this folder
+
+#!custom_path                       # allow Git to look inside this folder
+#custom_path/*                      # but ignore everything it contains
+#!custom_path/extras                # allow Git to look inside this folder
+#custom_path/extras/*               # but ignore everything it contains
+#!custom_path/extras/path_to_keep 
