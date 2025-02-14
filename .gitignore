@@ -3,6 +3,5 @@ package-lock.json
 node_modules/
 
 app/empresas/* 
-!app/empresas 						# allow Git to look inside this folder
 !app/empresas/web-ones				# allow Git to look inside this folder
 
