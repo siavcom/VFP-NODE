@@ -1,3 +1,5 @@
+WebSiavcom
+package-lock.json
 node_modules/
-app/empresas
+app/empresas/*
 !app/empresas/web-ones
