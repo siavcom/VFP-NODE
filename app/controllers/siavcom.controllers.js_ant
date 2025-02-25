@@ -476,7 +476,7 @@ exports.sql = async (req, res, callback) => {
 
             // val_defa = data[0][i].vvu_dat.trim();  // valor vue
              console.log('Nombre del campo=', nom_campo,',tipo=', tip_campo,'val_defa=', val_defa)
-            if (nom_campo == 'timestamp') {
+            if (nom_campo == 'timestamp'  && tip_campo!='int' ) { //  && tip_campo!='int'  Es row source
               sw_timestamp = true
               tip_campo = 'tsp'
             }
@@ -871,7 +871,7 @@ exports.sql = async (req, res, callback) => {
 
       for (const campo in datos) {  // Checamos todos los campos buffer
         //campo!='timestamp' &&//Buffer.isBuffer(datos[campo])
-        console.log('1) UPDATE campo =', campo, 'Type=', datos[campo].type)
+        console.log('UPDATE campo =', campo, 'Type=', datos[campo].type)
 
 
         if (!socket && datos[campo].type && datos[campo].type == 'Buffer') {
@@ -891,7 +891,7 @@ exports.sql = async (req, res, callback) => {
 
           }
 
-        console.log('2) UPDATE campo=', campo, 'Type=', typeof datos[campo])
+        console.log('UPDATE campo=', campo, 'Type=', typeof datos[campo])
       }
 
       // No es Postgres . Cambiamos el TimeStamp to Buffer para comparar actualizacion
@@ -914,7 +914,7 @@ exports.sql = async (req, res, callback) => {
 
        */
 
-      console.log('3) ===============(   UPDATE     )    datos=', datos, 'key_pri=', key_pri)
+      console.log('===============(   UPDATE     )    datos=', datos, 'key_pri=', key_pri)
       db[nom_tab].update(datos, {
         where: { key_pri: key_pri }
       })
@@ -1200,13 +1200,13 @@ exports.sql = async (req, res, callback) => {
           for (let ren = 0; ren < data[0].length; ren++) { // genera tantas vistas como sea posible
             query = data[0][ren].query;
 
-            console.log('GENERA TABLA <========= Ejecutara query===>', query, '<=====')
+            console.log('<========= Ejecutara query===>', query, '<=====')
             // do {
             swEnd = true
             swError = true
             await db.sequelize.query(query)
-              .then(async data => {
-                console.log('GENERA TABLA<========= Query ejecutado correctamente=======>', data)
+              .then(data => {
+                console.log('<========= Query ejecutado correctamente=======>', data)
                 swEnd = false
                 swError = false
 
@@ -1228,16 +1228,7 @@ exports.sql = async (req, res, callback) => {
 
           if (!swEnd) { // Si no hay error
             console.log('Genero Todo con exito. Generará modelo===>', nom_tab)
-             await genModel(dialect, nom_tab, db, dir_emp)
-             .then(async data => {
-             
-                console.log('1)============= Genero  Mdelo data=',data)
-                res_send(res, ['Ok'], broadcast);
-
-              })
-            console.log('2)=========== Genero  Mdelo data ')
-           //  res_send(res, ['Ok'], broadcast);
- 
+            await genModel(dialect, nom_tab, db, dir_emp)
           }
           //         else { // Hay error
           //           writeHead(broadcast,res, "query :" + error,'');
@@ -1275,7 +1266,7 @@ exports.sql = async (req, res, callback) => {
           console.log('<========= P_gen_indices===>', data)
           const query = data[0][0].query
           const modelo = data[0][0].modelo
-           db.sequelize.query(query)
+          db.sequelize.query(query)
             .then(async data => {
               console.log('<=========query GENERA INDICES=======>', data)
               //   this.genModel(nom_tab, db, dir_emp)
@@ -1372,8 +1363,8 @@ exports.sql = async (req, res, callback) => {
       ins_sql = "select nom_tab from vi_schema where tip_obj='MODEL' group by nom_tab"
 
       console.log('<========= GENMODELS ===>', ins_sql)
-    await   db.sequelize.query(ins_sql, opciones)
-        .then(async data => {
+      db.sequelize.query(ins_sql, opciones)
+        .then(data => {
           console.log('<========= GENMODELS data ===>', data[0])
           for (let ren = 0; ren < data[0].length; ren++) { // genera tantas vistas como sea posible
             const nom_tab = data[0][ren].nom_tab;
@@ -1637,8 +1628,10 @@ async function writeHead(broadcast, num_err, res, men_err, error) {
 ///////////////////////////////////////////
 // Genera Model para sequelize 
 //////////////////////////////////////////
+
 async function genModel(dialect, nom_tab, db, dir_emp) {
- 
+
+  try {
     if (dialect == 'postgres')
       ins_sql = `select F_gen_modelo(nom_ind) as query,nom_ind from man_comeind where lower(nom_tab)=lower('${nom_tab}') and num_ind=1 `
     else
@@ -1646,49 +1639,35 @@ async function genModel(dialect, nom_tab, db, dir_emp) {
 
     console.log('GENERA MODELO ', ins_sql)
 
-    await db.sequelize.query(ins_sql)
-      .then(async data => {
+    db.sequelize.query(ins_sql)
+      .then(data => {
         if (!data[0][0] || data[0][0].query == null || data[0][0].query.trim() == '') { // No hay modelo a generar
           return
         }
         query = data[0][0].query
         const nom_ind = data[0][0].nom_ind.trim()
         const modelo = dir_emp + 'files/' + nom_ind.toLowerCase() + '.js'
-    //    console.log('<=========Escribe Sequelize MODEL  Node Server=======>', modelo)
+        console.log('<=========Escribe Sequelize MODEL  Node Server=======>', modelo)
         //const fs = require('fs')
 
-        try { 
-        fs.writeFileSync(modelo, query)
-
-/*
-        fs.writeFileSync(modelo, query, (err) => {
+        fs.writeFile(modelo, query, (err) => {
           if (err) {
             console.log('<=========Error escribiento MODEL >', modelo, err)
             return "NODE ERROR. Can't write Sequelize MODEL " + modelo + " " + err
           }
-         console.log('<=========Escribio Sequelize MODEL  Node Server=======>', modelo)
         });
-    
-    */    
-        console.log('2) <=========Escribio Sequelize MODEL  Node Server=======>', modelo)
-        return ['Ok']
-        } catch  (error) {
-          console.log('ERROR :', error)
-          return 'error' + ins_sql
-      };
-        
-        
+
+        return 'Ok'
       })
       .catch(err => {
         console.log('ERROR :', err)
         return 'error' + ins_sql
       });
+  } catch (error) {
+    console.error(`NODE ERROR. Can't write Sequelize MODEL: ${error}`);
+    return 'error' + error
+  }
 }
-
-
-
-
-
 function base64(source) {
   // Encode in classical base64
 
