@@ -1232,7 +1232,7 @@ exports.sql = async (req, res, callback) => {
                 res_send(res, ['Ok'], broadcast);
 
               })
-            console.log('2)=========== Genero  Mdelo data ')
+
             //  res_send(res, ['Ok'], broadcast);
 
           }
@@ -1668,17 +1668,17 @@ async function genModel(dialect, nom_tab, db, dir_emp) {
             
             */
         console.log('2) <=========Escribio Sequelize MODEL  Node Server=======>', modelo)
-        return ['Ok']
+        return 'Ok'
       } catch (error) {
         console.log('ERROR :', error)
-        return 'error' + ins_sql
+        return 'ERROR : writing sequelyze MODEL file ' + nom_tab
       };
 
 
     })
     .catch(err => {
       console.log('ERROR :', err)
-      return 'error' + ins_sql
+      return 'ERROR :' + ins_sql
     });
 }
 
