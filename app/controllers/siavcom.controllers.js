@@ -671,7 +671,7 @@ exports.sql = async (req, res, callback) => {
         }) // fin then.data
         .catch(err => {
           console.log('USENODATA SQLError' + ins_sql, err)
-          writeHead(broadcast, 400, res, "USENODATA SQL ERROR " + ins_sql)
+          writeHead(broadcast, 400, res, "USENODATA SQL SERVER ERROR " + ins_sql)
 
           return
         });
@@ -1013,17 +1013,37 @@ exports.sql = async (req, res, callback) => {
       */
 
       delete condicion.atributes
-      db[nom_tab].destroy(condicion)
+
+      /*
+         db[nom_tab].destroy(condicion)
         .then(async data => {
           console.log('DELETE condicion =====', condicion, data)
           data = { result: true }
           await res_send(res, data, broadcast);
         })
-        .catch(err => {
+        .catch(err => { 
           console.log('DELETE error===>', err)
           writeHead(broadcast, 400, res, err.message);
           return;
         });
+
+     */
+      // se cambia promesa por async await
+      try {
+        const data = await db[nom_tab].destroy(condicion)
+        await res_send(res, data, broadcast);
+      } catch (error) {
+        for (const mensaje in error) {
+          //console.warn('============>>>>>>Errores',mensaje,error[mensaje])
+          for (const men in error[mensaje])
+            console.warn('============>>>>>>Errores', mensaje, men, error[mensaje][men])
+        }
+        console.error('Delete  Error', error)
+        let men_err = 'Delete error ' + error
+        writeHead(broadcast, 400, res, men_err, error);
+        return;
+      }
+
 
       break;
     // aqui me quede
@@ -1248,7 +1268,7 @@ exports.sql = async (req, res, callback) => {
           console.log('Error al ejecutar el query =====> ', query)
           //            writeHead(broadcast,res, "Error al ejecutar el query :" + query, err)
           //          writeHead(broadcast, 400, res, "", err)
-          writeHead(broadcast, 400, res, "query :" + query + ' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
+          writeHead(broadcast, 400, res, "query :" + query + ' SQL SERVER ERROR :' + err, { 'Content-Type': 'text/plain' });
 
           //      }
 
@@ -1282,13 +1302,13 @@ exports.sql = async (req, res, callback) => {
             })
             .catch(err => {
               console.log('No se pudo ejecutar ==', err)
-              writeHead(broadcast, 400, res, "query :" + ins_sql + ' SQL ERROR :' + err, { 'Content-Type': 'text/plain' });
+              writeHead(broadcast, 400, res, "query :" + ins_sql + ' SQL SERVER ERROR :' + err, { 'Content-Type': 'text/plain' });
               return
             });
         })
         .catch(err => {
           console.log('No se pudo ejecutar ==', err)
-          writeHead(broadcast, 400, res, "query :" + ins_sql + ' SQL ERROR :' + err);
+          writeHead(broadcast, 400, res, "query :" + ins_sql + ' SQL SERVER ERROR :' + err);
           return
         });
 
@@ -1319,7 +1339,7 @@ exports.sql = async (req, res, callback) => {
               })
               .catch(err => {
                 console.log('No se pudo ejecutar 1==', err)
-                writeHead(broadcast, 400, res, "query :" + ins_sql + ' SQL ERROR :' + err);
+                writeHead(broadcast, 400, res, "query :" + ins_sql + ' SQL SERVER ERROR :' + err);
                 console.log('Fin errror 1==')
                 sw_err = true
 
@@ -1333,7 +1353,7 @@ exports.sql = async (req, res, callback) => {
         })
         .catch(err => {
           console.log('No se pudo ejecutar 2 ==', err)
-          writeHead(broadcast, 400, res, "SQL ERROR " + ins_sql);
+          writeHead(broadcast, 400, res, "SQL SERVER ERROR " + ins_sql);
           console.log('Fin errror 2==')
           return;
         });
@@ -1352,7 +1372,7 @@ exports.sql = async (req, res, callback) => {
             return;
           }
           else {
-            writeHead(broadcast, 400, res, "SQL ERROR " + res, { 'Content-Type': 'text/plain' });
+            writeHead(broadcast, 400, res, "SQL SERVER ERROR " + res, { 'Content-Type': 'text/plain' });
             return
           }
         }) //  Fin promesa
@@ -1379,7 +1399,7 @@ exports.sql = async (req, res, callback) => {
           } // Fin For 
         }).catch(err => {
           console.log('No se pudo ejecutar ==', err)
-          writeHead(broadcast, 400, res, "SQL ERROR " + ins_sql)
+          writeHead(broadcast, 400, res, "SQL SERVER ERROR " + ins_sql)
           return
         });
       break
@@ -1597,7 +1617,10 @@ async function writeHead(broadcast, num_err, res, men_err, error) {
   //  res.writeHead(400, message, { 'Content-Type': 'text/plain' });
 
   try {
+    // Quitamos el mensaje de error de sequelize
 
+    messageError = messageError.replace('SequelizeDatabaseError:Error:', '')
+    messageError = messageError.replace(':Error: The transaction ended in the trigger. The batch has been aborted.', '')
     console.error('BackEnd error messageError ==========>', messageError, 'and num_err=', num_err, '<=============')
 
     // 5 Febrero 2024
