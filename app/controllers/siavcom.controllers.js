@@ -1031,7 +1031,11 @@ exports.sql = async (req, res, callback) => {
       // se cambia promesa por async await
       try {
         const data = await db[nom_tab].destroy(condicion)
-        await res_send(res, data, broadcast);
+        await res_send(res, 'OK', broadcast);
+        console.log('============>>>>>>DELETE OK data=', data)
+
+
+        //res_send(res, data, broadcast);
       } catch (error) {
         for (const mensaje in error) {
           //console.warn('============>>>>>>Errores',mensaje,error[mensaje])
@@ -1511,7 +1515,9 @@ async function res_send(res, data, broadcast) {
   }
   // si es Axios  
   //console.log('=======res_send data Axios ============== ', res.id, res.client)
+
   res.send(data)
+
   return
 
 }
