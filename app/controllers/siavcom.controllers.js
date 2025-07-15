@@ -1252,7 +1252,7 @@ exports.sql = async (req, res, callback) => {
             await genModel(dialect, nom_tab, db, dir_emp)
               .then(async data => {
 
-                console.log('1)============= Genero  Mdelo data=', data)
+                console.log('1)============= Genero  Modelo data=', data)
                 res_send(res, ['Ok'], broadcast);
 
               })
@@ -1369,9 +1369,12 @@ exports.sql = async (req, res, callback) => {
       opciones.mapToModel = true
 
       genModel(dialect, nom_tab, db, dir_emp)
-        .then(async (data) => {
+        .then(async data => {
+          console.log('<========= GENMODEL Escribio Sequelize MODEL Node Server Table=', nom_tab, data)
+          res_send(res, ['Ok'], broadcast);
 
-          if (data == 'Ok') {
+
+          /* if (data == 'Ok') {
             res_send(res, 'Se genero tabla ' + nom_tab, broadcast);
             return;
           }
@@ -1379,6 +1382,7 @@ exports.sql = async (req, res, callback) => {
             writeHead(broadcast, 400, res, "SQL SERVER ERROR " + res, { 'Content-Type': 'text/plain' });
             return
           }
+          */
         }) //  Fin promesa
         .catch(err => {
           console.log('No se pudo generar MODEL ', err)
@@ -1671,6 +1675,7 @@ async function genModel(dialect, nom_tab, db, dir_emp) {
     ins_sql = `select dbo.F_gen_modelo(nom_ind) as query,nom_ind from man_comeind where lower(nom_tab)=lower('${nom_tab}') and num_ind=1 `
 
   // console.log('GENERA MODELO ', ins_sql)
+
 
   await db.sequelize.query(ins_sql)
     .then(async data => {
