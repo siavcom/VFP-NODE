@@ -139,7 +139,7 @@ exports.login = (req, res, callback) => {
       const sistemas = ['files']  // poner todos los sistemas 
 
       for (i = 0; i < sistemas.length; i++) {
-        fs // Revisa los archivos que se generaron en la carpeta, para representar la información de los modelos
+        fs // Revisa los archivos que se generaron en la carpeta, para representar la informaciï¿½n de los modelos
           .readdirSync(dir_emp + sistemas[i])
           .filter(file => {
             return (file.indexOf('.') !== 0) && (file.slice(-3) === '.js');
@@ -453,7 +453,7 @@ exports.sql = async (req, res, callback) => {
 
             nom_tab: data[0][0].vac_vis,      // vista de actualizacion (mantenimiento) (anterior nom_tab)
             exp_where: data[0][0].wjs_vis,     //  wjs_vis=where javascript  sql_vis,   condicion where 
-            exp_indice: '',                    // expresión  del indice
+            exp_indice: '',                    // expresiï¿½n  del indice
             ord_vis: data[0][0].ord_vis.trim().toLowerCase(),         // orden de la vista
             est_tabla: {},                     // estructura de la tabla
             new: [{}],                         // registro new
@@ -469,10 +469,11 @@ exports.sql = async (req, res, callback) => {
             nom_campo = data[0][i].cam_dat.trim().toLowerCase(); // pasamos a minusculas
             tip_campo = data[0][i].tip_dat.toLowerCase().substring(0, 3);
             val_defa = data[0][i].vue_dat ? data[0][i].vue_dat.trim() : ''
-            des_campo = !data[0][i].ref_dat || data[0][i].ref_dat == null ? ' ' : data[0][i].ref_dat.trim(),  // Descripcion del campo
+            des_campo = !data[0][i].ref_dat || data[0][i].ref_dat == null ? ' ' : data[0][i].ref_dat.trim() // Descripcion del campo
 
-              // val_defa = data[0][i].vvu_dat.trim();  // valor vue
-              console.log('Nombre del campo=', nom_campo, ',tipo=', tip_campo, 'val_defa=', val_defa)
+            // val_defa = data[0][i].vvu_dat.trim();  // valor vue
+            //  console.log('Nombre del campo=', nom_campo, ',tipo=', tip_campo, 'val_defa=', val_defa)
+
             if (nom_campo == 'timestamp') {
               sw_timestamp = true
               tip_campo = 'tsp'
@@ -1248,7 +1249,7 @@ exports.sql = async (req, res, callback) => {
           } // Fin For 
 
           if (!swEnd) { // Si no hay error
-            console.log('Genero Todo con exito. Generará modelo===>', nom_tab)
+            console.log('Genero Todo con exito. Generarï¿½ modelo===>', nom_tab)
             await genModel(dialect, nom_tab, db, dir_emp)
               .then(async data => {
 
@@ -1438,30 +1439,54 @@ exports.sql = async (req, res, callback) => {
             return
           }
 
-          console.log('JASPER result[0]=', result[0])
+          // console.log('JASPER result[0]=', result[0])
           for (const campo in dataView) {
             result[0][0][campo] = dataView[campo]
           }
           //console.log('JASPER result[0]=', result)
           const jsonFile = JSON.stringify(result[0])  // aumentamos el resultado
           result = []  // Borramos el result
-          fs.writeFileSync('tmp/' + data.fileJson, jsonFile)  // escribe el archivo json
+          const fileJson = 'tmp/' + data.fileJson
+          fs.writeFileSync(fileJson, jsonFile)  // escribe el archivo json
 
           //result=[] 
 
           //******************
           //console.log('JASPERREPORT llama Axios ', data)
-          json = JSON.stringify(data)
+          // json = JSON.stringify(data)
 
 
           console.log('===================>LLAMA a JASPER ')
           result = []
+
+          const { exec } = require('child_process');
+          let output = 'pdf/' + empresa + '_' + fec_act + '_' + jrxml + '_' + Math.random().toString(36).slice(2, 14)
+          const ins_eje = `jasperstarter/bin/jasperstarter pr jrxml/${jrxml} -f ${data.format} -o ${output} -t json --data-file ${fileJson} `
+          console.log('JASPER ins_eje=', ins_eje)
+
+          output = output.trim() + '.' + data.format
+          exec(ins_eje, (error, stdout, stderr) => {
+            if (error) {
+              console.error(`Jasper Error =====: ${error}`);
+              fs.rmSync(jsonFile, { force: true, })
+              writeHead(broadcast, 400, res, "Error :", error)
+              return
+            }
+            fs.rmSync(fileJson, { force: true, }) // borramos el archivo json 
+
+            const data = fs.readFileSync(output);
+            fs.rmSync(output, { force: true, }) //  borramos el archivo pdf
+            res_send(res, data, broadcast)
+
+            console.log(`stdout: ${stdout}`);
+            console.error(`stderr: ${stderr}`);
+
+            return
+
+          });
+
+          /*
           axios.get(jasperServer + '?json=' + json, { responseType: 'arraybuffer' })
-
-
-            //axios.get(jasperServer, data, {
-            //  headers: { 'Content-type': 'application/json' }
-            //})
             .then(async result => {
               console.log('=======GENERO reporte con JASPER ========')
               res_send(res, result.data, broadcast)
@@ -1469,11 +1494,11 @@ exports.sql = async (req, res, callback) => {
             })
             .catch(err => {
               console.log('Jasper Error =====', err)
-              //const men_err = err.response.statusText
               writeHead(broadcast, 400, res, "Error :", err)
               return
             })
 
+            */
         })
         .catch(err => {
           console.log('No se pudo ejecutar SQL ==', err)
