@@ -1,6 +1,9 @@
 WebSiavcom
 package-lock.json
 node_modules/
+jrxml/*
+tmp/*
+pdf/*
 
 !app/empresas/
 app/empresas/* 
