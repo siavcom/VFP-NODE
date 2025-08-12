@@ -1,10 +1,10 @@
-WebSiavcom
+WebSiavcom/
 package-lock.json
 node_modules/
 jrxml/*
 tmp/*
 pdf/*
-
+JasperStarter/*
 !app/empresas/
 app/empresas/* 
 !app/empresas/web-ones				# allow Git to look inside this folder
