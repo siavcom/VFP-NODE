@@ -1468,7 +1468,7 @@ exports.sql = async (req, res, callback) => {
           exec(ins_eje, (error, stdout, stderr) => {
             if (error) {
               console.error(`Jasper Error =====: ${error}`);
-              fs.rmSync(jsonFile, { force: true, })
+              // fs.rmSync(fileJson, { force: true, })
               writeHead(broadcast, 400, res, "Error :", error)
               return
             }
