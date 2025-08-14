@@ -4,7 +4,7 @@ node_modules/
 jrxml/*
 tmp/*
 pdf/*
-JasperStarter/*
+jasperstarter/*
 !app/empresas/
 app/empresas/* 
 !app/empresas/web-ones				# allow Git to look inside this folder
