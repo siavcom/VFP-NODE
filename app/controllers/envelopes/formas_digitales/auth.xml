@@ -1,0 +1,8 @@
+<S:Envelope xmlns:S="http://schemas.xmlsoap.org/soap/envelope/">
+	<S:Body>
+		<ns4:Autenticar xmlns:ns2="http://cancelacfd.sat.gob.mx" xmlns:ns3="http://www.w3.org/2000/09/xmldsig#" xmlns:ns4="http://wservicios/">
+			<usuario><<login>></usuario>
+			<contrasena><<password>></contrasena>
+		</ns4:Autenticar>
+	</S:Body>
+</S:Envelope>

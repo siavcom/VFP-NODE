@@ -1,3 +1,7 @@
+// Ultima Modificacion  :
+// 15/Octubre/2025 Se quita  if (nom_campo != 'usu_usu')
+
+
 // funcion $(nom_fun) podemos definir una funcion basada en su nombre 
 
 //const { siavcom, Sequelize, queryInterface } = require("../models"); // llama aqui (index.js) que es donde esta la definicion de comenom
@@ -12,10 +16,18 @@
 
 /////////////////////// Fernando Cuadras //////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////
+// Allocating os module
+const util = require('util');
+const { exec } = require('child_process')
+const execAsync = util.promisify(exec);
+const os = require('os');
+var { join } = require('path');
+//var xml2js = require('xml2js');
 
 var CryptoJS = require('crypto-js');
 
 const fs = require('fs');
+const openssl = require('openssl-nodejs');
 
 const { Sequelize, DataTypes, QueryTypes } = require('sequelize');
 const { Connection } = require('tedious');
@@ -327,7 +339,8 @@ exports.sql = async (req, res, callback) => {
   const condicion = { where: {}, atributes: {} }
   const opciones = {
     plain: false,
-    raw: true
+    raw: true,
+    logging: false // Disables SQL query logging for all queries
   }
   //const condicion = { where: {} }
   //console.log('condicion.where =',req.body.where)
@@ -336,6 +349,14 @@ exports.sql = async (req, res, callback) => {
   //eval('condicion.where ='+req.body.where); // Condicion Where de busqueda
   let nom_vis = ''
   let nom_tab = ''
+  let tdo_tdo = ''
+  let ndo_doc = 0
+
+  if (req.body.tdo_tdo && req.body.tdo_tdo != null)
+    tdo_tdo = req.body.tdo_tdo
+
+  if (req.body.ndo_doc && req.body.ndo_doc != null)
+    ndo_doc = req.body.ndo_doc
 
   if (req.body.nom_vis && req.body.nom_vis != null)
     nom_vis = req.body.nom_vis
@@ -343,13 +364,16 @@ exports.sql = async (req, res, callback) => {
     nom_tab = req.body.nom_tab.trim()
 
   if (nom_tab == '') nom_tab = nom_vis
-  if (req.body.opciones && req.body.opciones.replacements) opciones['replacements'] = req.body.opciones.replacements
+  if (req.body.opciones && req.body.opciones.replacements)
+    opciones['replacements'] = req.body.opciones.replacements
 
   nom_tab = nom_tab.toLowerCase()
   nom_tab = nom_tab.trim()
 
   nom_vis = nom_vis.toLowerCase()
   nom_vis = nom_vis.trim()
+
+
 
   //if (req.body.nom_vis) nom_vis = req.body.nom_vis.toLowerCase();  // Nombre de la vista indice a utilizar 
 
@@ -553,8 +577,8 @@ exports.sql = async (req, res, callback) => {
               lon_dat: data[0][i].lon_dat
             }
 
-            if (nom_campo != 'usu_usu')
-              view.est_tabla[nom_campo] = est_campo; // generamos la definicion campo por campo
+            // 15/Octubre/2025 Se quita  if (nom_campo != 'usu_usu')
+            view.est_tabla[nom_campo] = est_campo; // generamos la definicion campo por campo
             // Segun el tipo de campo, inicializamos su valor en blanco, cero , fecha ,etc   
             // Generamos el renglo en null
             view.new[0][nom_campo] = null;
@@ -1459,7 +1483,7 @@ exports.sql = async (req, res, callback) => {
           console.log('===================>LLAMA a JASPER ')
           result = []
 
-          const { exec } = require('child_process');
+          //  const { exec } = require('child_process');
           let output = 'pdf/' + empresa + '_' + fec_act + '_' + jrxml + '_' + Math.random().toString(36).slice(2, 14)
           const ins_eje = `jasperstarter/bin/jasperstarter pr jrxml/${jrxml} -f ${data.format} -o ${output} -t json --data-file ${fileJson} `
           console.log('JASPER ins_eje=', ins_eje)
@@ -1508,17 +1532,540 @@ exports.sql = async (req, res, callback) => {
         });
       break;
 
-    default:
-    // code block
+    /////////////// Genera CFDI //////////////////  
+    case 'GENCFDI':
+      if (dialect == 'postgres')
+        ins_sql = `
+                DO $$
+                BEGIN
+                  DECLARE M_TIP_CFD  CHAR(2);
+                  select M_tip_cfd=tip_cfd from man_cometdo where tdo_tdo='${tdo_tdo}'; 
+                  if M_tip_cfd='P' then
+                       update man_comedoc set fel_doc=NOW()  where tdo_tdo='${tdo_tdo}' and ndo_doc='${ndo_doc}' and sta_doc='P';
+                  end if;
+                END;
+                select * from P_gen_cfdi('${tdo_tdo}',${ndo_doc})
+         
+                $$`
+      else
+
+        ins_sql = ` 
+                DECLARE @M_TIP_CFD AS CHAR(2);
+                select @M_tip_cfd=tip_cfd from man_cometdo where tdo_tdo='${tdo_tdo}'; 
+                if @M_tip_cfd='P'
+                   update man_comedoc set fel_doc=GETDATE() from man_comedoc where tdo_tdo='${tdo_tdo}' and ndo_doc='${ndo_doc}' and sta_doc='P';
+                execute P_gen_cfdi '${tdo_tdo}',${ndo_doc} ;`
+
+      //   const datos = sqlExec(ins_sql,db, opciones)
+      //   console.log('GENCFDI datos ===>', datos)
+      // cadena original generar el sello digital
+      console.log('=========== GENCFDI ===>', tdo_tdo, ndo_doc)
+      await db.sequelize.query(ins_sql, opciones)
+        .then(async data => {
+          const cfdi_xml = data[0][0].cfdi_xml
+          //  const cad_ori = data[0][0].cad_ori
+          let emp_tim = data[0][0].emp_tim
+          const usu_tim = data[0][0].usu_tim
+          const pas_tim = data[0][0].pas_tim
+          const web_tim = data[0][0].web_tim
+          let cfd_cer = data[0][0].cfd_cer
+          const cad_ori = data[0][0].cad_ori
+          //const cer_cer = data[0][0].cer_cer
+          const add_xml = data[0][0].add_xml
+          console.log('=======>>>>>>> GENCFDI cfd_cer :')
+          let posmes = 6
+          let cer_priv = ''
+
+          ins_sql = `select rfc_pge from man_comepge `
+
+          let rfc = ''
+          await db.sequelize.query(ins_sql, opciones)
+            .then(async data => {
+              rfc = data[0][0].rfc_pge.trim()
+
+            })
+            .catch(err => {
+              console.log('No se pudo ejecutar ==', err)
+              writeHead(broadcast, 400, res, "Error SQL:", err)
+              return
+            });
+
+          if (rfc.length == 12)
+            posmes = 5
+          const mes = +rfc.substring(posmes, posmes + 2)
+
+          if (rfc.length > 11) {
+
+            cer_priv = cfd_cer.slice(0, mes + 99) + cfd_cer.slice(mes + 100)
+            cfd_cer = cer_priv
+            cer_priv = cfd_cer.slice(0, mes + 199) + cfd_cer.slice(mes + 200)
+            cfd_cer = cer_priv
+            cer_priv = cfd_cer.slice(0, mes + 299) + cfd_cer.slice(mes + 300)
+            cfd_cer = cer_priv
+            cer_priv = cfd_cer.slice(0, mes + 399) + cfd_cer.slice(mes + 400)
+            cfd_cer = cer_priv
+            cer_priv = cfd_cer.slice(0, mes + 499) + cfd_cer.slice(mes + 500)
+          }
+
+          const tempInput = join(os.tmpdir(), `input_${Date.now()}${genRandStr(4)}.der`);
+          const tempOutput = join(os.tmpdir(), `output_${Date.now()}${genRandStr(4)}.pem`);
+          const tempCadOri = join(os.tmpdir(), `cfdi_${Date.now()}${genRandStr(4)}.cad`);
+
+          //const tempInput = join('tmp', `input_${Date.now()}${genRandStr(4)}.der`);
+          //const tempOutput = join('tmp', `output_${Date.now()}${genRandStr(4)}.pem`);
+          //const tempCadOri = join('tmp', `cfdi_${Date.now()}${genRandStr(4)}.cad`);
+          //console.log('Archivos temporales :', tempInput, tempOutput, tempCfdi);
+
+          cer_priv = atob(cer_priv); // Decodificamos de base64
+          fs.writeFileSync(tempInput, cer_priv);
+          fs.writeFileSync(tempCadOri, cad_ori); //cfdi_xml
+
+          // escribimos el resultado
+          let command = `openssl dgst -sha256 -sign ${tempInput} -out ${tempOutput} ${tempCadOri}`
+          //        const command = `openssl pkcs8 -passin ${pwd_cer} -inform DER -in ${tempInput} -out ${tempOutput}`;
+
+          try {
+            // Ejecutar el comando
+            const { stdout, stderr } = await execAsync(command);
+            // Leer resultado
+            const resLec = fs.readFileSync(tempOutput);
+            const sello = resLec.toString('base64');
+
+            if (sello.length == 0) {
+              console.log('No se pudo certificar el CFDI ==', err)
+              writeHead(broadcast, 400, res, "Certificado invalido ", err)
+              return
+            }
+            //cfdi_xml = cfdi_xml.replace('<<selloDigital>>', sello)  // agregamos el sello digital
+
+            emp_tim = emp_tim.replaceAll('.fxp', '')
+            emp_tim = emp_tim.toLowerCase()
+
+            if (dialect == 'postgres') {
+
+              ins_sql = `
+                DO $$
+
+                DECLARE M_STA_DOC  CHAR(1);
+                DECLARE M_tdo_cdo  CHAR(3);
+                select  M_tip_cfd=tip_cfd from man_cometdo where tdo_tdo='${tdo_tdo}'; 
+                M_STA_DOC=' '
+
+                BEGIN
+                  SELECT M_sta_doc=STA_DOC from man_comedoc where tdo_tdo='${tdo_tdo}' AND ndo_doc=${ndo_doc}
+                  if M_STA_DOC>' ' AND 
+                    M_STA_DOC<>'X' AND 
+                    M_STA_DOC<>'T' AND
+                    M_STA_DOC<>'C' AND 
+                    M_STA_DOC<>'N' THEN
+                    update man_comedoc set sta_doc='X' where tdo_tdo='${tdo_tdo}' AND ndo_doc=${ndo_doc};
+                    select 1 as ok;
+                  else
+                    select 0 as ok;
+                  END IF
+                COMMIT
+                $$
+                `
+            } else {   // MSSQL y SYBASE
+
+              ins_sql = `
+                DECLARE @STA_DOC AS CHAR(1)
+                DECLARE @tip_cfd AS CHAR(2)
+                select @tip_cfd=tip_cfd from man_cometdo where tdo_tdo='${tdo_tdo}'; 
+                SET @STA_DOC=' '
+
+                BEGIN TRANSACTION
+                  SET @STA_DOC=(SELECT sta_doc from man_comedoc where tdo_tdo='${tdo_tdo}' AND ndo_doc=${ndo_doc})
+                  if @STA_DOC>' ' AND @STA_DOC<>'X' AND @STA_DOC<>'T' AND @STA_DOC<>'C' AND @STA_DOC<>'N' 
+                    begin
+                      update man_comedoc set sta_doc='X' where tdo_tdo='${tdo_tdo}' AND ndo_doc=${ndo_doc};
+                     select 1  as ok;
+                    end
+                  else
+                    select 0 as ok ;
+                COMMIT TRANSACTION
+                `
+            }
+
+            //* Grabanos el xml en la base de datos
+
+            await db.sequelize.query(ins_sql, opciones).
+              then(async data => {
+                if (data[0][0].ok == 0) {
+                  writeHead(broadcast, 400, res, 'Error al timbrar', "El documento no se puede timbrar, su estatus es diferente de 'Proceso' ")
+                  return
+                }
+
+              })
+              .catch(err => {
+                console.log('No se pudo ejecutar ==', err)
+                writeHead(broadcast, 400, res, "Error SQL:", err)
+                return
+              });
+
+            const cfdi_tim = await timbraCFDI('timbrado', cfdi_xml.replace('<<selloDigital>>', sello), emp_tim, usu_tim, pas_tim, web_tim, tdo_tdo, ndo_doc, db, opciones, res, broadcast)
+            if (!cfdi_tim || !cfdi_tim.length) {
+              console.log('No se pudo timbrar el CFDI ==', err)
+              writeHead(broadcast, 400, res.res_timbre, "Erorr al timbrar ", err)
+              return
+            }
+
+            ///////// Graba el CFDI timbrado en la base de datos /////////////////
+            await grabaCfdi(tdo_tdo, ndo_doc, cfdi_tim, emp_tim, add_xml, 'T', dialect, db, opciones, res, broadcast)
+            /*
+                        const parser = require('xml2json');
+                        let xmlDoc = await parser.toJson(cfdi_tim, { object: true });
+                        const tim_digital = xmlDoc["cfdi:Comprobante"]['cfdi:Complemento']['tfd:TimbreFiscalDigital']
+            
+                        const UUID = tim_digital["UUID"]
+            
+                        if (add_xml.length > 1) { // Si hay hay addenda
+                          cfdi_tim = cfdi_tim.replaceAll('</cfdi:Comprobante>', add_xml + '</cfdi:Comprobante>')
+                        }
+                        const sta_doc = 'T'  // Timbrado
+                        const arc_xml = ''
+                        if (dialect == 'postgres') {
+                          ins_sql = `
+                            DO $$
+                           
+                            DECLARE M_key_pri  int ;
+                            DECLARE M_TDO_TDO  CHAR(3);
+                            DECLARE M_NDO_DOC  INT;
+                            DECLARE M_STA_DOC  CHAR(1);
+                            DECLARE M_fel_doc  TIMESTAMP(3);
+            
+                             BEGIN
+                                M_TDO_TDO='${tdo_tdo}';
+                                M_NDO_DOC=${ndo_doc};
+                                M_STA_DOC='${sta_doc}';
+                            
+                                select M_STA_DOC=sta_DOC from man_comedoc where tdo_tdo=M_TDO_TDO AND ndo_doc=M_NDO_DOC;
+                                M_key_pri=0;
+                                SELECT M_key_pri=ISNULL(key_pri,0) from man_comexml  where tdo_tdo=M_tdo_tdo AND ndo_doc=M_ndo_doc;
+                         
+                                IF M_key_pri is null OR M_key_pri=0 THEN  -- NO EXISTE REGISTRO DE TIMBRADI
+                                    INSERT INTO man_COMEXML (tdo_tdo,ndo_doc,STA_DOC) VALUES (M_tdo_tdo,M_ndo_doc,M_STA_DOC);
+                                    SELECT M_key_pri=ISNULL(key_pri,0) from man_comexml  where tdo_tdo=M_tdo_tdo AND ndo_doc=M_ndo_doc;
+                                END IF
+                                
+                                IF M_STA_DOC<>'C' and M_STA_DOC<>'N' and M_key_pri>0 THEN
+                                   UPDATE man_COMEXML SET CFD_XML='${cfdi_tim}',STA_DOC=M_STA_DOC,emt_xml='${emp_tim}',uuid='${UUID}'
+                                      WHERE key_pri=M_key_pri;
+                                 END IF
+            
+                                IF M_STA_DOC='C' or M_STA_DOC='N' and M_key_pri>0 THEN
+                                    UPDATE man_COMEXML SET ARC_XML=[${arc_xml}], STA_DOC=M_STA_DOC WHERE key_pri=M_key_pri;
+                                END IF
+            
+                                UPDATE man_comedoc SET  sta_doc='${sta_doc}' WHERE tdo_tdo=M_tdo_tdo AND ndo_doc=M_ndo_doc
+                            COMMIT;
+                            $$;
+              `
+                        }
+                        else {   // MSSQL y SYBASE
+            
+                          ins_sql = `
+                            SET TEXTSIZE 524288
+                            DECLARE @key_pri as int
+                            DECLARE @TDO_TDO AS CHAR(3)
+                            DECLARE @NDO_DOC AS INT
+                            DECLARE @STA_DOC AS CHAR(1)
+            
+                            SET @TDO_TDO='${tdo_tdo}'
+                            SET @NDO_DOC=${ndo_doc}
+                            SET @STA_DOC='${sta_doc}';
+             
+                            BEGIN tran
+                            select @sta_doc=sta_doc from man_comedoc where tdo_tdo=@TDO_TDO AND ndo_doc=@NDO_DOC
+                            SET @key_pri=0
+            
+                            SELECT @key_pri=ISNULL(key_pri,0) from man_comexml  where tdo_tdo=@tdo_tdo AND ndo_doc=@ndo_doc
+                              IF @key_pri is null OR @key_pri=0
+                                  BEGIN
+                                    INSERT INTO man_COMEXML (tdo_tdo,ndo_doc,STA_DOC) VALUES (@tdo_tdo,@ndo_doc,@STA_DOC)
+                                    SELECT @key_pri=ISNULL(key_pri,0) from man_comexml  where tdo_tdo=@tdo_tdo AND ndo_doc=@ndo_doc;
+                                  END
+                                
+                                IF @STA_DOC<>'C' and @STA_DOC<>'N' and @key_pri>0
+                                  BEGIN
+                                    UPDATE man_COMEXML SET CFD_XML='${cfdi_tim}', STA_DOC=@sta_doc,emt_xml='${emp_tim}',uuid='${UUID}' 
+                                      WHERE key_pri=@key_pri
+                                  END
+            
+                                IF @STA_DOC='C' or @STA_DOC='N' and @key_pri>0
+                                   UPDATE man_COMEXML SET ARC_XML='${arc_xml}', STA_DOC=@sta_doc WHERE key_pri=@key_pri
+            
+                                UPDATE man_comedoc SET  sta_doc=@sta_doc WHERE tdo_tdo=@tdo_tdo AND ndo_doc=@ndo_doc
+            
+                             commit tran `
+                        }
+            
+                        ins_sql = ins_sql.replaceAll('  ', ' ')
+                        //  console.log('Graba CFDI SQL ====>', ins_sql)
+            
+                        //* Grabanos el xml en la base de datos
+                        await db.sequelize.query(ins_sql, opciones)
+                          .then(async data => {
+                            console.log('Grabo el CFDI timbrado en la base de datos ====>')
+                            res_send(res, ['Ok'], broadcast);
+                          })
+                          .catch(err => {
+                            writeHead(broadcast, 400, res, "Error SQL:", err)
+                          }
+                          )
+                        ////////////////////////////////// 
+            */
+          }
+          catch (error) {
+            console.log('No se pudo grabar el CFDI timbrado ==', error)
+            writeHead(broadcast, 400, res, "No se pudo grabar el CFDI timbrado", error)
+            return
+          } finally {
+            // Limpiar archivos temporales
+            try { unlinkSync(tempInput); } catch (e) { }
+            try { unlinkSync(tempOutput); } catch (e) { }
+            try { unlinkSync(tempCadOri); } catch (e) { }
+          }
+        })
+  }
+}
+
+//////////////////////////////////////////////////////////////////
+/////////////////  Funciones de timbrado /////////////////////////
+//////////////////////////////////////////////////////////////////
+
+//////////////   Genera CFDI  //////////////////////
+async function grabaCfdi(tdo_tdo, ndo_doc, cfdi_tim, emp_tim, add_xml, sta_doc, dialect, db, opciones, res, broadcast) {
+
+  ///////// Graba el CFDI timbrado en la base de datos /////////////////
+  //            await grabaCfdi(tdo_tdo, ndo_doc, cfdi_tim, emp_tim, add_xml, 'T', dialect, db, opciones, res, broadcast)
+
+  const parser = require('xml2json');
+  let xmlDoc = await parser.toJson(cfdi_tim, { object: true });
+  const tim_digital = xmlDoc["cfdi:Comprobante"]['cfdi:Complemento']['tfd:TimbreFiscalDigital']
+
+  const UUID = tim_digital["UUID"]
+
+  if (add_xml.length > 1) { // Si hay hay addenda
+    cfdi_tim = cfdi_tim.replaceAll('</cfdi:Comprobante>', add_xml + '</cfdi:Comprobante>')
   }
 
+  const arc_xml = ''
+  if (dialect == 'postgres') {
+    ins_sql = `
+                DO $$
+               
+                DECLARE M_key_pri  int ;
+                DECLARE M_TDO_TDO  CHAR(3);
+                DECLARE M_NDO_DOC  INT;
+                DECLARE M_STA_DOC  CHAR(1);
+                DECLARE M_fel_doc  TIMESTAMP(3);
 
-};
+                 BEGIN
+                    M_TDO_TDO='${tdo_tdo}';
+                    M_NDO_DOC=${ndo_doc};
+                    M_STA_DOC='${sta_doc}';
+                
+                    select M_STA_DOC=sta_DOC from man_comedoc where tdo_tdo=M_TDO_TDO AND ndo_doc=M_NDO_DOC;
+                    M_key_pri=0;
+                    SELECT M_key_pri=ISNULL(key_pri,0) from man_comexml  where tdo_tdo=M_tdo_tdo AND ndo_doc=M_ndo_doc;
+             
+                    IF M_key_pri is null OR M_key_pri=0 THEN  -- NO EXISTE REGISTRO DE TIMBRADI
+                        INSERT INTO man_COMEXML (tdo_tdo,ndo_doc,STA_DOC) VALUES (M_tdo_tdo,M_ndo_doc,M_STA_DOC);
+                        SELECT M_key_pri=ISNULL(key_pri,0) from man_comexml  where tdo_tdo=M_tdo_tdo AND ndo_doc=M_ndo_doc;
+                    END IF
+                    
+                    IF M_STA_DOC<>'C' and M_STA_DOC<>'N' and M_key_pri>0 THEN
+                       UPDATE man_COMEXML SET CFD_XML='${cfdi_tim}',STA_DOC='${sta_doc}',emt_xml='${emp_tim}',uuid='${UUID}'
+                          WHERE key_pri=M_key_pri;
+                     END IF
 
-//////////////////////////////////////////////////////
-/////////////////  Funciones /////////////////////////
-//////////////////////////////////////////////////////
+                    IF M_STA_DOC='C' or M_STA_DOC='N' and M_key_pri>0 THEN
+                        UPDATE man_COMEXML SET ARC_XML=[${arc_xml}], STA_DOC='${sta_doc}' WHERE key_pri=M_key_pri;
+                    END IF
 
+                    UPDATE man_comedoc SET  sta_doc='${sta_doc}' WHERE tdo_tdo=M_tdo_tdo AND ndo_doc=M_ndo_doc
+                COMMIT;
+                $$;
+	`
+  }
+  else {   // MSSQL y SYBASE
+
+    ins_sql = `
+                SET TEXTSIZE 524288
+                DECLARE @key_pri as int
+                DECLARE @TDO_TDO AS CHAR(3)
+                DECLARE @NDO_DOC AS INT
+                DECLARE @STA_DOC AS CHAR(1)
+
+                SET @TDO_TDO='${tdo_tdo}'
+                SET @NDO_DOC=${ndo_doc}
+
+ 
+                BEGIN tran
+                select @sta_doc=sta_doc from man_comedoc where tdo_tdo=@TDO_TDO AND ndo_doc=@NDO_DOC
+                SET @key_pri=0
+
+                SELECT @key_pri=ISNULL(key_pri,0) from man_comexml  where tdo_tdo=@tdo_tdo AND ndo_doc=@ndo_doc
+                  IF @key_pri is null OR @key_pri=0
+                      BEGIN
+                        INSERT INTO man_COMEXML (tdo_tdo,ndo_doc,STA_DOC) VALUES (@tdo_tdo,@ndo_doc,@STA_DOC)
+                        SELECT @key_pri=ISNULL(key_pri,0) from man_comexml  where tdo_tdo=@tdo_tdo AND ndo_doc=@ndo_doc;
+                      END
+                    
+                    IF @STA_DOC<>'C' and @STA_DOC<>'N' and @key_pri>0
+                      BEGIN
+                        
+                        UPDATE man_COMEXML SET CFD_XML='${cfdi_tim}', STA_DOC='${sta_doc}',emt_xml='${emp_tim}',uuid='${UUID}' 
+                          WHERE key_pri=@key_pri
+                      END
+
+                    IF @STA_DOC='C' or @STA_DOC='N' and @key_pri>0
+                       UPDATE man_COMEXML SET ARC_XML='${arc_xml}', STA_DOC='${sta_doc}' WHERE key_pri=@key_pri
+
+                    UPDATE man_comedoc SET  sta_doc='${sta_doc}' WHERE tdo_tdo=@tdo_tdo AND ndo_doc=@ndo_doc
+
+                 commit tran `
+  }
+
+  ins_sql = ins_sql.replaceAll('  ', ' ')
+  //  console.log('Graba CFDI SQL ====>', ins_sql)
+
+  //* Grabanos el xml en la base de datos
+  await db.sequelize.query(ins_sql, opciones)
+    .then(async data => {
+      console.log('Grabo el CFDI timbrado en la base de datos ====>')
+      res_send(res, ['Ok'], broadcast);
+    })
+    .catch(err => {
+      writeHead(broadcast, 400, res, "Error SQL:", err)
+    }
+    )
+
+}
+
+
+/////////////////////////////////
+// Timbrado con formas digitales
+/////////////////////////////////
+
+async function timbraCFDI(tip_llamada, cfdi_xml, emp_timbradora, usu_tim, pas_tim, web_tim, tdo_tdo, ndo_doc, db, opciones, res, broadcast) {
+  let soapEnvelope = fs.readFileSync(`app/controllers/envelopes/${emp_timbradora}/auth.xml`, "utf-8")
+  soapEnvelope = soapEnvelope.replace('<<login>>', usu_tim)
+  soapEnvelope = soapEnvelope.replace('<<password>>', pas_tim)  //pas_tim
+  // console.log('timbraCFDI soapEnvelope=>>>>', soapEnvelope); // envelope de autentificacion 
+  // console.log(' Web tiombrado = ', web_tim)
+  let response = await fetch(web_tim,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/xml; charset=utf-8',
+        'Content-Length': `${soapEnvelope.length} `
+      },
+      body: soapEnvelope
+
+    })
+
+  let xml = await response.text()
+
+  if (response.status != 200) {
+    writeHead(broadcast, 400, res, 'No se puede conectar con el servicio de timbrado. Verifique su conexion a Internet o sus datos de acceso. Empresa:' + emp_timbradora + ' ' + res.mensaje)
+    return
+  }
+
+  const ins_sql = ` update man_comedoc set sta_doc='X' where tdo_tdo=' ${tdo_tdo}' and ndo_doc=${ndo_doc}`
+  await db.sequelize.query(ins_sql, opciones)
+    .then(async data => {
+      console.log('Comedoc actualizado a X por proceso de timbrado ======>', data)
+
+    })
+    .catch(err => {
+      console.log('No se pudo ejecutar ==', err)
+      writeHead(broadcast, 400, res, "Error SQL:", err)
+      return
+    });
+
+  const parser = require('xml2json');
+
+  let resJson = await parser.toJson(xml, { object: true });
+
+  // obtenemos el token de autentificacion
+  const token = resJson["S:Envelope"]["S:Body"]['ns2:AutenticarResponse']['return']['token']
+
+  // console.log('Token de autentificacion = ', token)
+
+  if (token.length < 2) {
+    writeHead(broadcast, 400, res, 'No se puede autentificar con el servicio de timbrado. Verifique su conexion a Internet o sus datos de acceso. Empresa:' + emp_timbradora + ' ' + res.mensaje)
+    return
+  }
+
+  // procedemos a timbrar
+  soapEnvelope = fs.readFileSync(`app/controllers/envelopes/${emp_timbradora}/${tip_llamada}.xml`, "utf-8")
+  soapEnvelope = soapEnvelope.replace('<<token>>', token.trim())
+  soapEnvelope = soapEnvelope.replace('<<xml_xml>>', cfdi_xml)
+
+  // console.log('timbraCFDI soapEnvelope=>>>>', soapEnvelope); // envelope de timbrado
+
+  response = await fetch(web_tim,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/xml; charset=utf-8',
+        'Content-Length': `${soapEnvelope.length} `
+      },
+      body: soapEnvelope,
+    })
+
+  xml = await response.text()
+
+  if (response.status != 200) {
+    writeHead(broadcast, 400, res, 'No se puede conectar con el servicio de timbrado. Verifique su conexion a Internet o sus datos de acceso. Empresa:' + emp_timbradora + ' ' + res.mensaje)
+    return
+  }
+
+  // pasamos a json la respuesta para obtener el resulltado del timbrado
+  resJson = await parser.toJson(xml, { object: true });
+
+  const result = resJson['S:Envelope']['S:Body']['ns2:TimbrarResponse'].return
+
+  // console.log(' RESPUESTA TIMBRADO  result =====>', result)
+
+  // si hay error
+  if (result['codigo']) {
+    writeHead(broadcast, 400, res, 'No se pudo timbrar el CFDI. ' + result['mensaje'])
+    return
+  }
+
+  // obtenemos el cfdi timbrado
+  let xmlString = result['cfdi']
+
+  const he = require('he'); // HTML Entities
+
+  const xmlDoc = he.decode(he.decode(xmlString));
+  //  const xmlDoc = he.decode(xmlString);
+
+  // Paso 2: Parsear el XML decodificado
+  console.log('TIMBRADO EXITOSO =====>', tdo_tdo, ndo_doc)
+  return xmlDoc
+}
+
+
+function decodeHTMLEntities(text) {
+  const entities = {
+    '&amp;': '&',
+    '&lt;': '<',
+    '&gt;': '>',
+    '&quot;': '"',
+    '&apos;': "'"
+  };
+
+  return text.replace(/&(amp|lt|gt|quot|apos);/g, (match, entity) => {
+    return entities[`&${entity};`];
+  });
+}
+
+
+// Envia la respuesta por socket o axios al front end
 async function res_send(res, data, broadcast) {
 
   // asignamos socket si existe
@@ -1657,16 +2204,18 @@ async function writeHead(broadcast, num_err, res, men_err, error) {
     messageError = messageError.replace('SequelizeDatabaseError:Error:', '')
     messageError = messageError.replace(':Error: The transaction ended in the trigger. The batch has been aborted.', '')
     console.error('BackEnd error messageError ==========>', messageError, 'and num_err=', num_err, '<=============')
-
     // 5 Febrero 2024
     //  res.statusMessage =messageError
     //  res.status(num_err).end()
+    console.error('BackEnd error res ==========>', res)
+
+
+
 
     if (res.status)
       res.status(num_err).send(messageError);
     else
       res.writeHead(num_err).end()
-
 
     //res.writeHead(num_err)
     //res.end(messageError)
@@ -1759,4 +2308,23 @@ function base64(source) {
   encodedSource = encodedSource.replace(/\//g, '_');
 
   return encodedSource;
+}
+
+// Genera una cadena aleatoria de string de longitud n
+function genRandStr(length) {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return result;
+}
+function sqlExec(ins_sql, db, opciones) {
+  db.sequelize.query(ins_sql, opciones)
+    .then(async data => {
+      console.log('<=========query SQLExec=======>', data)
+
+    }).error(err => {
+      console.log('No se pudo ejecutar ==', err)
+    });
 }

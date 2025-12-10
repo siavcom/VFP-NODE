@@ -2,12 +2,16 @@
 
 http://176.16.200.20:8080/siavcom/viLla1Nom/copNom/C/codNom/000001
 */
+
+/*
+
+*/
 const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 
 const app = express();
-app.use(bodyParser.json({limit: '16000kb'}));  // maximo de tamaño de datos a transferir
+app.use(bodyParser.json({ limit: '16000kb' }));  // maximo de tamaño de datos a transferir
 
 /*
 var corsOptions = {
