@@ -168,11 +168,11 @@
 	</variable>
 	<variable name="des_fec" class="java.lang.String">
 		<variableExpression><![CDATA[$V{des_fec}]]></variableExpression>
-		<initialValueExpression><![CDATA[new SimpleDateFormat("dd/MMM/yyyy hh:mm:ss a").format(new Date())]]></initialValueExpression>
+		<initialValueExpression><![CDATA[$F{des_fec}]]></initialValueExpression>
 	</variable>
 	<variable name="has_fec" class="java.lang.String">
 		<variableExpression><![CDATA[$V{has_fec}]]></variableExpression>
-		<initialValueExpression><![CDATA[new SimpleDateFormat("dd/MMM/yyyy hh:mm:ss a").format(new Date())]]></initialValueExpression>
+		<initialValueExpression><![CDATA[$F{has_fec}]]></initialValueExpression>
 	</variable>
 	<variable name="con_rep" class="java.lang.String">
 		<variableExpression><![CDATA[$V{con_rep}]]></variableExpression>
@@ -279,7 +279,7 @@
 					</textElement>
 					<textFieldExpression><![CDATA[$F{nom_nom}]]></textFieldExpression>
 				</textField>
-				<textField pattern="#,##0.000;(#,##0.000-)">
+				<textField pattern="#,##0.00;-#,##0.00">
 					<reportElement x="239" y="0" width="79" height="12" isRemoveLineWhenBlank="true" uuid="6719c807-83c6-46a6-812e-4b2210dba425">
 						<property name="com.jaspersoft.studio.unit.height" value="px"/>
 						<property name="com.jaspersoft.studio.unit.width" value="px"/>
@@ -290,7 +290,7 @@
 					</textElement>
 					<textFieldExpression><![CDATA[$V{VAR_001}]]></textFieldExpression>
 				</textField>
-				<textField pattern="#,##0.000;(#,##0.000-)">
+				<textField pattern="#,##0.00;-#,##0.00">
 					<reportElement x="319" y="0" width="83" height="12" isRemoveLineWhenBlank="true" uuid="21d15579-744b-4ffb-a8a4-2df3b3f9362f">
 						<property name="com.jaspersoft.studio.unit.height" value="px"/>
 						<property name="com.jaspersoft.studio.unit.width" value="px"/>
@@ -301,7 +301,7 @@
 					</textElement>
 					<textFieldExpression><![CDATA[$V{VAR_002}]]></textFieldExpression>
 				</textField>
-				<textField pattern="#,##0.000;(#,##0.000-)">
+				<textField pattern="#,##0.00;-#,##0.00">
 					<reportElement x="403" y="0" width="81" height="12" isRemoveLineWhenBlank="true" uuid="0a5b48cd-7c52-4568-8846-53ca366d9ad5">
 						<property name="com.jaspersoft.studio.unit.height" value="px"/>
 						<property name="com.jaspersoft.studio.unit.width" value="px"/>
@@ -312,7 +312,7 @@
 					</textElement>
 					<textFieldExpression><![CDATA[$V{VAR_003}]]></textFieldExpression>
 				</textField>
-				<textField pattern="#,##0.000;(#,##0.000-)">
+				<textField pattern="#,##0.00;-#,##0.00">
 					<reportElement x="481" y="0" width="80" height="12" isRemoveLineWhenBlank="true" uuid="a842ca97-3f05-4b2c-8565-6093813862e2">
 						<property name="com.jaspersoft.studio.unit.height" value="px"/>
 						<property name="com.jaspersoft.studio.unit.width" value="px"/>
@@ -356,7 +356,7 @@
 				<textElement textAlignment="Left">
 					<font fontName="Arial" size="8"/>
 				</textElement>
-				<textFieldExpression><![CDATA["Estado de cuenta de clientes" + ( $V{mon_rep}==0 ? " convertido a pesos " : " en " +$V{des_mon1}.get($V{mon_rep})) + " del " +LEFT($V{des_fec},11)+ " al " +LEFT($V{has_fec},11)]]></textFieldExpression>
+				<textFieldExpression><![CDATA["Estado de cuenta de clientes" + ( $V{mon_rep}==0 ? " convertido a pesos " : " en " +$V{des_mon1}.get($V{mon_rep})) + " del " +LEFT($V{des_fec},10)+ " al " +LEFT($V{has_fec},10)]]></textFieldExpression>
 			</textField>
 			<line>
 				<reportElement x="0" y="27" width="562" height="1" uuid="108e9c70-9b78-46a1-babc-60f90783d2b6">
@@ -493,7 +493,7 @@
 					<pen lineWidth="1.0" lineStyle="Solid"/>
 				</graphicElement>
 			</line>
-			<textField pattern="#,##0.000;(#,##0.000-)">
+			<textField pattern="#,##0.00;-#,##0.00">
 				<reportElement x="239" y="3" width="79" height="12" uuid="3c65e51f-506a-4529-8956-6557a4aadced">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
@@ -503,7 +503,7 @@
 				</textElement>
 				<textFieldExpression><![CDATA[$V{VAR_007}]]></textFieldExpression>
 			</textField>
-			<textField pattern="#,##0.000;(#,##0.000-)">
+			<textField pattern="#,##0.00;-#,##0.00">
 				<reportElement x="319" y="3" width="83" height="12" uuid="43841753-3436-44af-9b5c-ee9dc8336b03">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
@@ -513,7 +513,7 @@
 				</textElement>
 				<textFieldExpression><![CDATA[$V{VAR_004}]]></textFieldExpression>
 			</textField>
-			<textField pattern="#,##0.000;(#,##0.000-)">
+			<textField pattern="#,##0.00;-#,##0.00">
 				<reportElement x="403" y="3" width="81" height="12" uuid="18ec3a42-a8e5-43e6-95ba-45952ad3e74c">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
@@ -523,7 +523,7 @@
 				</textElement>
 				<textFieldExpression><![CDATA[$V{VAR_005}]]></textFieldExpression>
 			</textField>
-			<textField pattern="#,##0.000;(#,##0.000-)">
+			<textField pattern="#,##0.00;-#,##0.00">
 				<reportElement x="481" y="3" width="80" height="12" uuid="1ad13eed-6f66-4c3d-8526-5a5622ac1774">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>

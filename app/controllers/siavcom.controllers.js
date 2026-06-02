@@ -98,12 +98,13 @@ exports.login = (req, res, callback) => {
   var dir_emp = process.cwd() + '/app/empresas/' + nom_emp // directorio de empresas 
   try {
     options = require(dir_emp + '/db.config.js')
+    console.log('Archivo de configuracion:', dir_emp + '/db.config.js')
   } catch (error) {
 
     // console.log('Lee empresa options', options)
     //console.log('Lee archivo de configuracion====>>>',options)
 
-    console.log('No existe archivo de definicion empresa ', nom_emp)
+    console.error('No existe archivo de definicion empresa ', dir_emp + '/db.config.js')
     socket.emit('desconecta', nom_emp + ' Company definition invalid ')
 
     //  writeHead(false, 408, res, nom_emp + ' Company definition invalid ')// , { 'Content-Type': 'text/plain' });
@@ -889,13 +890,14 @@ exports.sql = async (req, res, callback) => {
       delete datos['val_vista'];
 
 
-      console.log('UPDATE datos==========>', datos)
+      // console.log('UPDATE datos==========>', datos)
 
       for (const campo in datos) {  // Checamos todos los campos buffer
         //campo!='timestamp' &&//Buffer.isBuffer(datos[campo])
-        console.log('1) UPDATE campo =', campo, 'Type=', datos[campo].type)
+        //  console.log('1) UPDATE campo =', campo, 'datos[campo]=', datos[campo])
 
 
+        // 02/Jun/2026  checar datos[campo].type . Type no se para que sirve      para ver si es buffer de MSSQL o de Postgres
         if (!socket && datos[campo].type && datos[campo].type == 'Buffer') {
           console.log('UPDATE campo buffer axios ===>>>', campo)
           const buffer = datos[campo]
@@ -906,7 +908,7 @@ exports.sql = async (req, res, callback) => {
             const arrBuffer = new ArrayBuffer(datos[campo]);
             datos[campo] = Buffer.from(arrBuffer);
 
-            console.log('=======0UPDATE campo buffer socket ===>>>', datos[campo])
+            console.log('=======UPDATE campo buffer socket ===>>>', datos[campo])
 
             //    const buffer =new DataView(datos[campo])  // view.getUint8())    //new Uint8Array( datos[campo])
             //    datos[campo] =buffer.getUint8()       //new Uint8Array(datos[buffer]);
@@ -936,7 +938,8 @@ exports.sql = async (req, res, callback) => {
 
        */
 
-      console.log('3) ===============(   UPDATE     )    datos=', datos, 'key_pri=', key_pri)
+      // console.log('3) ===============(   UPDATE     )    datos=', datos, 'key_pri=', key_pri)
+      console.log('3) ===============(   UPDATE     ) nom_tab=', nom_tab, 'key_pri=', key_pri)
       db[nom_tab].update(datos, {
         where: { key_pri: key_pri }
       })
@@ -1215,9 +1218,8 @@ exports.sql = async (req, res, callback) => {
         })
         .catch(err => {
           console.log('SQLEXEC ERROR ==' + ins_sql, err)
-          writeHead(broadcast, 400, res, "SQLEXEC ERROR " + ins_sql)
+          writeHead(broadcast, 400, res, "SQLServer ERROR " + ins_sql, err)
           return
-
         });
 
       break;
@@ -1938,6 +1940,7 @@ async function grabaCfdi(tdo_tdo, ndo_doc, cfdi_tim, emp_tim, add_xml, sta_doc, 
       res_send(res, ['Ok'], broadcast);
     })
     .catch(err => {
+      console.error('No se pudo ejecutar ==', err, 'ins_sql=', ins_sql)
       writeHead(broadcast, 400, res, "Error SQL:", err)
     }
     )
@@ -2045,7 +2048,7 @@ async function timbraCFDI(tip_llamada, cfdi_xml, emp_timbradora, usu_tim, pas_ti
   //  const xmlDoc = he.decode(xmlString);
 
   // Paso 2: Parsear el XML decodificado
-  console.log('TIMBRADO EXITOSO =====>', tdo_tdo, ndo_doc)
+  console.log('===================TIMBRADO EXITOSO ======== Documento=>>', tdo_tdo, ndo_doc)
   return xmlDoc
 }
 

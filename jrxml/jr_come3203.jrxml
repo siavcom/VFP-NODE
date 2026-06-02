@@ -318,7 +318,7 @@
 		<variableExpression><![CDATA[$V{des_fam}]]></variableExpression>
 		<initialValueExpression><![CDATA[$F{des_fam}]]></initialValueExpression>
 	</variable>
-	<variable name="ult_cla" class="java.lang.String">
+	<variable name="ult_cla" class="java.lang.Integer">
 		<variableExpression><![CDATA[$V{ult_cla}]]></variableExpression>
 		<initialValueExpression><![CDATA[$F{ult_cla}]]></initialValueExpression>
 	</variable>

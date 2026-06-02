@@ -174,7 +174,7 @@
 		<property name="com.jaspersoft.studio.field.name" value="de5_pge"/>
 		<property name="com.jaspersoft.studio.field.label" value="de5_pge"/>
 	</field>
-	<field name="ult_cla" class="java.lang.String">
+	<field name="ult_cla" class="java.lang.Integer">
 		<property name="com.jaspersoft.studio.field.name" value="ult_cla"/>
 		<property name="com.jaspersoft.studio.field.label" value="ult_cla"/>
 	</field>
@@ -782,7 +782,7 @@
 				<text><![CDATA[Saldo Costo]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="2" y="38" width="28" height="12" uuid="0eabce36-0baa-43bf-9344-e3c7855c775e">
+				<reportElement x="2" y="38" width="37" height="12" uuid="0eabce36-0baa-43bf-9344-e3c7855c775e">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 				</reportElement>
@@ -1145,7 +1145,7 @@
 				</textElement>
 				<text><![CDATA[Productos]]></text>
 			</staticText>
-			<textField>
+			<textField pattern="#,##0.000;#,##0.000-">
 				<reportElement x="79" y="17" width="92" height="12" uuid="56b7d296-89ae-46b8-a030-c8c8aaa9f681">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
@@ -1236,10 +1236,11 @@
 				<textFieldExpression><![CDATA[$V{sum_cos_ini} + $V{sum_coe} - $V{sum_cos}]]></textFieldExpression>
 			</textField>
 			<staticText>
-				<reportElement x="2" y="41" width="49" height="12" uuid="c7005763-b171-4c6f-8eca-a65adadc5986">
+				<reportElement x="2" y="44" width="49" height="12" uuid="c7005763-b171-4c6f-8eca-a65adadc5986">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
-					<printWhenExpression><![CDATA[$F{con_rep}.trim().length()> 1]]></printWhenExpression>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					<printWhenExpression><![CDATA[$V{con_rep}.trim().length()> 1]]></printWhenExpression>
 				</reportElement>
 				<textElement textAlignment="Left">
 					<font fontName="Arial" size="8"/>
@@ -1247,15 +1248,16 @@
 				<text><![CDATA[Condiciones:]]></text>
 			</staticText>
 			<textField>
-				<reportElement x="84" y="61" width="469" height="43" isRemoveLineWhenBlank="true" uuid="61a72a9b-2422-4edf-b857-491a22c82e26">
+				<reportElement x="84" y="44" width="469" height="43" isRemoveLineWhenBlank="true" uuid="61a72a9b-2422-4edf-b857-491a22c82e26">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
-					<printWhenExpression><![CDATA[$F{con_rep}.trim().length()> 1]]></printWhenExpression>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					<printWhenExpression><![CDATA[$V{con_rep}.trim().length()> 1]]></printWhenExpression>
 				</reportElement>
 				<textElement textAlignment="Left">
 					<font fontName="Arial" size="8"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{con_rep}.trim()]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$V{con_rep}.trim()]]></textFieldExpression>
 			</textField>
 		</band>
 	</summary>

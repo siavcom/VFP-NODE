@@ -254,10 +254,6 @@
 		<property name="com.jaspersoft.studio.field.name" value="for_cal"/>
 		<property name="com.jaspersoft.studio.field.label" value="for_cal"/>
 	</field>
-	<field name="val_mon1" class="java.lang.Double">
-		<property name="com.jaspersoft.studio.field.name" value="val_mon1"/>
-		<property name="com.jaspersoft.studio.field.label" value="val_mon1"/>
-	</field>
 	<field name="in_tdo_tdo" class="java.lang.String">
 		<property name="com.jaspersoft.studio.field.name" value="in_tdo_tdo"/>
 		<property name="com.jaspersoft.studio.field.label" value="in_tdo_tdo"/>
@@ -363,8 +359,8 @@
 		<initialValueExpression><![CDATA[$F{for_cal}]]></initialValueExpression>
 	</variable>
 	<variable name="val_mon" class="java.lang.Double">
-		<variableExpression><![CDATA[$V{val_mon}]]></variableExpression>
-		<initialValueExpression><![CDATA[$F{val_mon1}]]></initialValueExpression>
+		<variableExpression><![CDATA[$V{val_mon1}.get($F{mon_isu})]]></variableExpression>
+		<initialValueExpression><![CDATA[$V{val_mon1}.get($F{mon_isu})]]></initialValueExpression>
 	</variable>
 	<variable name="cal_exi" class="java.lang.Double" resetType="Group" resetGroup="gru_2">
 		<variableExpression><![CDATA[$F{can_mov}]]></variableExpression>

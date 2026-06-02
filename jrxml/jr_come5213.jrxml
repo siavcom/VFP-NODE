@@ -277,7 +277,7 @@
 				<textElement textAlignment="Right">
 					<font fontName="Arial" size="8"/>
 				</textElement>
-				<textFieldExpression><![CDATA[( $F{cod_nom}.toUpperCase()== "TOTAL" ? 0 : $F{imp_doc} )]]></textFieldExpression>
+				<textFieldExpression><![CDATA[( $F{nom_nom}.toUpperCase()== "TOTAL" ? 0 : $F{imp_doc} )]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0.00;-#,##0.00">
 				<reportElement x="343" y="0" width="78" height="12" isRemoveLineWhenBlank="true" uuid="f35f7ddc-809f-406e-bda1-c2786825a3d2">
@@ -288,7 +288,7 @@
 				<textElement textAlignment="Right">
 					<font fontName="Arial" size="8"/>
 				</textElement>
-				<textFieldExpression><![CDATA[( $F{cod_nom}.toUpperCase()== "TOTAL" ? 0 : $F{ipo_doc} )]]></textFieldExpression>
+				<textFieldExpression><![CDATA[( $F{nom_nom}.toUpperCase()== "TOTAL" ? 0 : $F{ipo_doc} )]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0.0000;-#,##0.0000">
 				<reportElement x="422" y="0" width="78" height="12" isRemoveLineWhenBlank="true" uuid="f93153e4-4b4d-4846-90b1-72f4f700797f">

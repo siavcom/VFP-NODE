@@ -305,12 +305,13 @@
 	<group name="gru_1">
 		<groupExpression><![CDATA[$F{cod_nom}]]></groupExpression>
 		<groupHeader>
-			<band height="2"/>
+			<band/>
 		</groupHeader>
 		<groupFooter>
-			<band height="13">
+			<band height="12">
+				<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				<staticText>
-					<reportElement x="192" y="1" width="36" height="12" isRemoveLineWhenBlank="true" uuid="238d9793-e728-4a0f-b7e1-276543f9f652">
+					<reportElement x="192" y="0" width="36" height="12" isRemoveLineWhenBlank="true" uuid="238d9793-e728-4a0f-b7e1-276543f9f652">
 						<property name="com.jaspersoft.studio.unit.height" value="px"/>
 						<property name="com.jaspersoft.studio.unit.width" value="px"/>
 						<printWhenExpression><![CDATA[$F{tdo_tdo}!=null]]></printWhenExpression>
@@ -320,8 +321,8 @@
 					</textElement>
 					<text><![CDATA[Subtotal]]></text>
 				</staticText>
-				<textField pattern="#,##0.000;(#,##0.000-)">
-					<reportElement x="344" y="1" width="87" height="12" isRemoveLineWhenBlank="true" uuid="88316123-829b-47d3-ac76-49ec8db06093">
+				<textField pattern="#,##0.00;-#,##0.00">
+					<reportElement x="344" y="0" width="87" height="12" isRemoveLineWhenBlank="true" uuid="88316123-829b-47d3-ac76-49ec8db06093">
 						<property name="com.jaspersoft.studio.unit.height" value="px"/>
 						<property name="com.jaspersoft.studio.unit.width" value="px"/>
 						<printWhenExpression><![CDATA[$F{tdo_tdo}!=null]]></printWhenExpression>
@@ -331,8 +332,8 @@
 					</textElement>
 					<textFieldExpression><![CDATA[$V{VAR_001}]]></textFieldExpression>
 				</textField>
-				<textField pattern="#,##0.000;(#,##0.000-)">
-					<reportElement x="420" y="1" width="79" height="12" isRemoveLineWhenBlank="true" uuid="140c8d7d-db5e-4e19-8e3f-255efe9b60aa">
+				<textField pattern="#,##0.00;-#,##0.00">
+					<reportElement x="420" y="0" width="79" height="12" isRemoveLineWhenBlank="true" uuid="140c8d7d-db5e-4e19-8e3f-255efe9b60aa">
 						<property name="com.jaspersoft.studio.unit.height" value="px"/>
 						<property name="com.jaspersoft.studio.unit.width" value="px"/>
 						<printWhenExpression><![CDATA[$F{tdo_tdo}!=null]]></printWhenExpression>
@@ -342,8 +343,8 @@
 					</textElement>
 					<textFieldExpression><![CDATA[$V{VAR_002}]]></textFieldExpression>
 				</textField>
-				<textField pattern="#,##0.000;(#,##0.000-)">
-					<reportElement x="491" y="1" width="76" height="12" isRemoveLineWhenBlank="true" uuid="19cc7462-945a-4951-85cd-51135fc76655">
+				<textField pattern="#,##0.00;-#,##0.00">
+					<reportElement x="491" y="0" width="76" height="12" isRemoveLineWhenBlank="true" uuid="19cc7462-945a-4951-85cd-51135fc76655">
 						<property name="com.jaspersoft.studio.unit.height" value="px"/>
 						<property name="com.jaspersoft.studio.unit.width" value="px"/>
 						<printWhenExpression><![CDATA[$F{tdo_tdo}!=null]]></printWhenExpression>
@@ -359,9 +360,10 @@
 	<group name="gru_2">
 		<groupExpression><![CDATA[$F{nom_nom}]]></groupExpression>
 		<groupHeader>
-			<band height="15">
+			<band height="12">
+				<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				<textField>
-					<reportElement x="9" y="1" width="89" height="12" isRemoveLineWhenBlank="true" uuid="1479e145-bc3f-4bbc-910b-1c4ede37f086">
+					<reportElement x="9" y="0" width="89" height="12" isRemoveLineWhenBlank="true" uuid="1479e145-bc3f-4bbc-910b-1c4ede37f086">
 						<property name="com.jaspersoft.studio.unit.height" value="px"/>
 						<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					</reportElement>
@@ -371,7 +373,7 @@
 					<textFieldExpression><![CDATA[$F{cod_nom}]]></textFieldExpression>
 				</textField>
 				<textField>
-					<reportElement x="104" y="1" width="301" height="12" isRemoveLineWhenBlank="true" uuid="a39853df-b501-4b1e-809f-6b9c04aae834">
+					<reportElement x="104" y="0" width="301" height="12" isRemoveLineWhenBlank="true" uuid="a39853df-b501-4b1e-809f-6b9c04aae834">
 						<property name="com.jaspersoft.studio.unit.height" value="px"/>
 						<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					</reportElement>
@@ -381,7 +383,7 @@
 					<textFieldExpression><![CDATA[$F{nom_nom}]]></textFieldExpression>
 				</textField>
 				<textField>
-					<reportElement x="420" y="1" width="79" height="12" isRemoveLineWhenBlank="true" uuid="c2e35682-e3f4-418e-9ceb-a0cc236542a1">
+					<reportElement x="420" y="0" width="79" height="12" isRemoveLineWhenBlank="true" uuid="c2e35682-e3f4-418e-9ceb-a0cc236542a1">
 						<property name="com.jaspersoft.studio.unit.height" value="px"/>
 						<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					</reportElement>
@@ -390,8 +392,8 @@
 					</textElement>
 					<textFieldExpression><![CDATA["saldo Inicial:"]]></textFieldExpression>
 				</textField>
-				<textField pattern="#,##0.000;(#,##0.000-)">
-					<reportElement x="491" y="1" width="76" height="12" isRemoveLineWhenBlank="true" uuid="d654bdc1-8b6b-4018-9139-09d2f623bd84">
+				<textField pattern="#,##0.00;-#,##0.00">
+					<reportElement x="491" y="0" width="76" height="12" isRemoveLineWhenBlank="true" uuid="d654bdc1-8b6b-4018-9139-09d2f623bd84">
 						<property name="com.jaspersoft.studio.unit.height" value="px"/>
 						<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					</reportElement>
@@ -403,11 +405,14 @@
 			</band>
 		</groupHeader>
 		<groupFooter>
-			<band height="2"/>
+			<band>
+				<property name="com.jaspersoft.studio.unit.height" value="px"/>
+			</band>
 		</groupFooter>
 	</group>
 	<pageHeader>
-		<band height="60" splitType="Stretch">
+		<band height="56" splitType="Stretch">
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
 			<textField>
 				<reportElement x="410" y="3" width="157" height="12" uuid="9093cbfd-6610-431a-8710-229db2ac2d08">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
@@ -586,11 +591,13 @@ Vencimiento]]></text>
 		</band>
 	</pageHeader>
 	<detail>
-		<band height="18" splitType="Stretch">
+		<band height="12" splitType="Stretch">
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
 			<textField>
-				<reportElement x="8" y="1" width="75" height="12" isRemoveLineWhenBlank="true" uuid="508c5ae6-a627-4b70-8ea0-ce05b36deabc">
+				<reportElement x="10" y="0" width="75" height="12" isRemoveLineWhenBlank="true" uuid="508c5ae6-a627-4b70-8ea0-ce05b36deabc">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
 					<printWhenExpression><![CDATA[$F{tdo_tdo}!=null]]></printWhenExpression>
 				</reportElement>
 				<textElement textAlignment="Left">
@@ -599,9 +606,10 @@ Vencimiento]]></text>
 				<textFieldExpression><![CDATA[$F{des_tdo}.trim()+ " " + $F{des_tcd}.trim()]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0.###;(#,##0.###-)">
-				<reportElement x="82" y="1" width="39" height="12" isRemoveLineWhenBlank="true" uuid="35ce5f21-dd8d-4456-b255-9a129bc7aeac">
+				<reportElement x="82" y="0" width="39" height="12" isRemoveLineWhenBlank="true" uuid="35ce5f21-dd8d-4456-b255-9a129bc7aeac">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
 					<printWhenExpression><![CDATA[$F{tdo_tdo}!=null]]></printWhenExpression>
 				</reportElement>
 				<textElement textAlignment="Left">
@@ -610,9 +618,10 @@ Vencimiento]]></text>
 				<textFieldExpression><![CDATA[$F{ndo_doc}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="123" y="1" width="69" height="12" isRemoveLineWhenBlank="true" uuid="5fe78cea-a044-40a4-b11f-a76275c75339">
+				<reportElement x="123" y="0" width="69" height="12" isRemoveLineWhenBlank="true" uuid="5fe78cea-a044-40a4-b11f-a76275c75339">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
 					<printWhenExpression><![CDATA[$F{tdo_tdo}!=null]]></printWhenExpression>
 				</reportElement>
 				<textElement textAlignment="Left">
@@ -621,9 +630,10 @@ Vencimiento]]></text>
 				<textFieldExpression><![CDATA[$F{ref_doc}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="186" y="1" width="22" height="12" isRemoveLineWhenBlank="true" uuid="a4c742e4-a5a3-4c5f-99ce-3969d057ed43">
+				<reportElement x="186" y="0" width="22" height="12" isRemoveLineWhenBlank="true" uuid="a4c742e4-a5a3-4c5f-99ce-3969d057ed43">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
 					<printWhenExpression><![CDATA[$F{tdo_tdo}!=null]]></printWhenExpression>
 				</reportElement>
 				<textElement textAlignment="Right">
@@ -632,9 +642,10 @@ Vencimiento]]></text>
 				<textFieldExpression><![CDATA[$F{ven_ven}]]></textFieldExpression>
 			</textField>
 			<textField pattern="">
-				<reportElement x="214" y="1" width="58" height="12" isRemoveLineWhenBlank="true" uuid="7c974495-277e-4e06-ba98-9ced392e6a89">
+				<reportElement x="214" y="0" width="58" height="12" isRemoveLineWhenBlank="true" uuid="7c974495-277e-4e06-ba98-9ced392e6a89">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
 					<printWhenExpression><![CDATA[$F{tdo_tdo}!=null]]></printWhenExpression>
 				</reportElement>
 				<textElement textAlignment="Left">
@@ -643,9 +654,10 @@ Vencimiento]]></text>
 				<textFieldExpression><![CDATA[LEFT($F{fec_doc},10)]]></textFieldExpression>
 			</textField>
 			<textField pattern="">
-				<reportElement x="270" y="1" width="55" height="12" isRemoveLineWhenBlank="true" uuid="8d96e68b-6c31-4ab2-a234-8b79ff1fc121">
+				<reportElement x="270" y="0" width="55" height="12" isRemoveLineWhenBlank="true" uuid="8d96e68b-6c31-4ab2-a234-8b79ff1fc121">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
 					<printWhenExpression><![CDATA[$F{tdo_tdo}!=null && $V{coa_tdo} != "A"]]></printWhenExpression>
 				</reportElement>
 				<textElement textAlignment="Left">
@@ -653,10 +665,11 @@ Vencimiento]]></text>
 				</textElement>
 				<textFieldExpression><![CDATA[LEFT($F{fve_doc},10)]]></textFieldExpression>
 			</textField>
-			<textField pattern="#,##0.000;(#,##0.000-)">
-				<reportElement x="359" y="1" width="72" height="12" isRemoveLineWhenBlank="true" uuid="0ba6d444-cc57-4a05-83d3-985e4a4798cd">
+			<textField pattern="#,##0.00;-#,##0.00">
+				<reportElement x="359" y="0" width="72" height="12" isRemoveLineWhenBlank="true" uuid="0ba6d444-cc57-4a05-83d3-985e4a4798cd">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
 					<printWhenExpression><![CDATA[$F{coa_tdo}.equals("C") && $F{tdo_tdo}!=null]]></printWhenExpression>
 				</reportElement>
 				<textElement textAlignment="Right">
@@ -664,10 +677,11 @@ Vencimiento]]></text>
 				</textElement>
 				<textFieldExpression><![CDATA[$V{car_cli}]]></textFieldExpression>
 			</textField>
-			<textField pattern="#,##0.000;(#,##0.000-)">
-				<reportElement x="428" y="1" width="71" height="12" isRemoveLineWhenBlank="true" uuid="32f815c2-dc6b-480d-8cd5-c4b38cf8f524">
+			<textField pattern="#,##0.00;-#,##0.00">
+				<reportElement x="428" y="0" width="71" height="12" isRemoveLineWhenBlank="true" uuid="32f815c2-dc6b-480d-8cd5-c4b38cf8f524">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
 					<printWhenExpression><![CDATA[$F{coa_tdo}.equals("A") && $F{tdo_tdo}!=null]]></printWhenExpression>
 				</reportElement>
 				<textElement textAlignment="Right">
@@ -675,10 +689,11 @@ Vencimiento]]></text>
 				</textElement>
 				<textFieldExpression><![CDATA[$V{abo_cli}]]></textFieldExpression>
 			</textField>
-			<textField pattern="#,##0.000;(#,##0.000-)">
-				<reportElement x="494" y="1" width="72" height="12" isRemoveLineWhenBlank="true" uuid="82cdedb1-a198-41e6-9bc9-30bb16045caa">
+			<textField pattern="#,##0.00;-#,##0.00">
+				<reportElement x="494" y="0" width="72" height="12" isRemoveLineWhenBlank="true" uuid="82cdedb1-a198-41e6-9bc9-30bb16045caa">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
 					<printWhenExpression><![CDATA[$F{tdo_tdo}!=null]]></printWhenExpression>
 				</reportElement>
 				<textElement textAlignment="Right">
@@ -686,10 +701,12 @@ Vencimiento]]></text>
 				</textElement>
 				<textFieldExpression><![CDATA[$V{saldo}]]></textFieldExpression>
 			</textField>
-			<textField pattern="#,##0.000;(#,##0.000-)">
-				<reportElement x="310" y="1" width="52" height="12" isRemoveLineWhenBlank="true" uuid="b6219d11-5afe-4f95-abf9-d8519c366714">
+			<textField pattern="#,##0.00;-#,##0.00">
+				<reportElement x="310" y="0" width="52" height="12" isRemoveLineWhenBlank="true" uuid="b6219d11-5afe-4f95-abf9-d8519c366714">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					<printWhenExpression><![CDATA[$F{tdo_tdo}!=null]]></printWhenExpression>
 				</reportElement>
 				<textElement textAlignment="Right">
 					<font fontName="Arial" size="8"/>
@@ -756,7 +773,7 @@ Vencimiento]]></text>
 				</textElement>
 				<text><![CDATA[Total]]></text>
 			</staticText>
-			<textField pattern="#,##0.000;(#,##0.000-)">
+			<textField pattern="#,##0.00;-#,##0.00">
 				<reportElement x="246" y="4" width="76" height="12" uuid="452ace88-9f1f-47e8-b35d-1ba68f136d04">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
@@ -766,7 +783,7 @@ Vencimiento]]></text>
 				</textElement>
 				<textFieldExpression><![CDATA[$V{sum_sal}]]></textFieldExpression>
 			</textField>
-			<textField pattern="#,##0.000;(#,##0.000-)">
+			<textField pattern="#,##0.00;-#,##0.00">
 				<reportElement x="344" y="4" width="87" height="12" uuid="a45b95c6-0150-46b6-a67f-ddb053956545">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
@@ -776,7 +793,7 @@ Vencimiento]]></text>
 				</textElement>
 				<textFieldExpression><![CDATA[$V{totcar_cli}]]></textFieldExpression>
 			</textField>
-			<textField pattern="#,##0.000;(#,##0.000-)">
+			<textField pattern="#,##0.00;-#,##0.00">
 				<reportElement x="420" y="4" width="79" height="12" uuid="466ef315-7e97-4ef4-bc1c-b87df63af9ad">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
@@ -786,7 +803,7 @@ Vencimiento]]></text>
 				</textElement>
 				<textFieldExpression><![CDATA[$V{totabo_cli}]]></textFieldExpression>
 			</textField>
-			<textField pattern="#,##0.000;(#,##0.000-)">
+			<textField pattern="#,##0.00;-#,##0.00">
 				<reportElement x="491" y="4" width="76" height="12" uuid="144e11c4-dbe4-4e77-8bf6-ec67f6717609">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>

@@ -222,7 +222,7 @@
 		<property name="com.jaspersoft.studio.field.name" value="de5_pge"/>
 		<property name="com.jaspersoft.studio.field.label" value="de5_pge"/>
 	</field>
-	<field name="ult_cla" class="java.lang.String">
+	<field name="ult_cla" class="java.lang.Integer">
 		<property name="com.jaspersoft.studio.field.name" value="ult_cla"/>
 		<property name="com.jaspersoft.studio.field.label" value="ult_cla"/>
 	</field>
@@ -254,7 +254,7 @@
 		<property name="com.jaspersoft.studio.field.name" value="des_fa3"/>
 		<property name="com.jaspersoft.studio.field.label" value="des_fa3"/>
 	</field>
-	<field name="tip_pre" class="java.lang.String">
+	<field name="tip_pre" class="java.lang.Integer">
 		<property name="com.jaspersoft.studio.field.name" value="tip_pre"/>
 		<property name="com.jaspersoft.studio.field.label" value="tip_pre"/>
 	</field>
@@ -328,7 +328,7 @@
 	</variable>
 	<variable name="tip_pre" class="java.lang.String">
 		<variableExpression><![CDATA[$V{tip_pre}]]></variableExpression>
-		<initialValueExpression><![CDATA[$F{tip_pre}]]></initialValueExpression>
+		<initialValueExpression><![CDATA[$F{tip_pre}==1? "A" : $F{tip_pre}==2? "B" : $F{tip_pre}==3 ? "C" : $F{tip_pre}==4? "D" : $F{tip_pre}==5? "E" : $F{tip_pre}==6? "F" :  "G"]]></initialValueExpression>
 	</variable>
 	<variable name="alm_rep" class="java.lang.String">
 		<variableExpression><![CDATA[$V{alm_rep}]]></variableExpression>
