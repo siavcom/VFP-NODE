@@ -743,10 +743,19 @@ exports.sql = async (req, res, callback) => {
           campo != 'usu_cre' &&
           campo != 'timestamp'
         ) {
-          if (datos[campo].type && datos[campo].type == 'Buffer') {
-            console.log('UPDATE campo buffer ===>>>', campo)
-            const buffer = datos[campo]
-            datos[campo] = Buffer.from(buffer)
+          try {
+            if (datos[campo].type && datos[campo].type == 'Buffer') {
+              console.log('UPDATE campo buffer ===>>>', campo)
+              const buffer = datos[campo]
+              datos[campo] = Buffer.from(buffer)
+            }
+          } catch (error) {
+
+            console.error('Insert  Error', error)
+            let men_err = 'Insert error ' + error
+            console.error('Insert  Error', men_err)// transaction.rollback();
+            writeHead(broadcast, 400, res, men_err, error);
+            return;
           }
 
           datosEnviar[campo] = datos[campo]
@@ -889,33 +898,37 @@ exports.sql = async (req, res, callback) => {
       delete datos['key_pri']   // borramos el key pri de los datos a actualizar
       delete datos['val_vista'];
 
-
       // console.log('UPDATE datos==========>', datos)
 
       for (const campo in datos) {  // Checamos todos los campos buffer
-        //campo!='timestamp' &&//Buffer.isBuffer(datos[campo])
-        //  console.log('1) UPDATE campo =', campo, 'datos[campo]=', datos[campo])
 
+        // Para ver si es buffer de MSSQL o de Postgres
+        // 02/Jun/2026  checar datos[campo].type . Type nos indica un campo buffer como TimeStamp
+        // el if tenia datos[campo].type == 'Buffer' y se cambio a typeof datos[campo] == 'object'
+        if (typeof datos[campo] == 'object') {
+          /* EL campo buffer tiene esta composicion
+          datos[campo] = { 
+          type: 'Buffer',
+           data: [0,   0,   0,   0,  56, 112, 110, 198  ]
+          }
+          */
 
-        // 02/Jun/2026  checar datos[campo].type . Type no se para que sirve      para ver si es buffer de MSSQL o de Postgres
-        if (!socket && datos[campo].type && datos[campo].type == 'Buffer') {
-          console.log('UPDATE campo buffer axios ===>>>', campo)
-          const buffer = datos[campo]
-          datos[campo] = Buffer.from(buffer)
-        } else
-          if (typeof datos[campo] == 'object') {
+          console.log('+++++++++++++++++++++++++UPDATE campo buffer axios ===>>>', campo, datos[campo], 'typeof=', typeof datos[campo])
 
+          if (!socket) {
+            const buffer = datos[campo]
+            datos[campo] = Buffer.from(buffer)
+          } else
+          //if (socket && typeof datos[campo] == 'object')
+          {
             const arrBuffer = new ArrayBuffer(datos[campo]);
             datos[campo] = Buffer.from(arrBuffer);
-
-            console.log('=======UPDATE campo buffer socket ===>>>', datos[campo])
 
             //    const buffer =new DataView(datos[campo])  // view.getUint8())    //new Uint8Array( datos[campo])
             //    datos[campo] =buffer.getUint8()       //new Uint8Array(datos[buffer]);
 
           }
-
-        console.log('2) UPDATE campo=', campo, 'Type=', typeof datos[campo])
+        }
       }
 
       // No es Postgres . Cambiamos el TimeStamp to Buffer para comparar actualizacion
